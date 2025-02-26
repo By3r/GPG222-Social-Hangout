@@ -1,68 +1,97 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 using UnityEngine;
-using System.Text;
-using TMPro;
+using System.IO;
 
-public class Server : MonoBehaviour
+
+
+namespace Mustafa
 {
-    [SerializeField] string ipAddress;
-    [SerializeField] int port;
-    Socket server;
-
-    List<Socket> clients = new List<Socket>();
-
-    void Start()
+    public class Server : MonoBehaviour
     {
-        server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        server.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
-        server.Listen(1000);
-        Debug.LogError("Waiting for connection...");
-        server.Blocking = false;
-    }
+        [SerializeField] string ipAddress;
+        [SerializeField] int port;
+        Socket server;
 
-    void Update()
-    {
-        try
+        List<Socket> clients = new List<Socket>();
+
+        PlayerData serverPayerData;
+        public List<PlayerColorData> playerColorData = new List<PlayerColorData>();
+
+        void Start()
         {
-            clients.Add(server.Accept());
-            Debug.LogError("Client connected!");
-        }
-        catch (SocketException e)
-        {
-            if (e.SocketErrorCode != SocketError.WouldBlock)
-            {
-                Debug.LogError(e.ToString());
-            }
+            serverPayerData = new PlayerData("SERVER", 0);
+
+            server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            server.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
+            server.Listen(1000);
+            Debug.LogError("Waiting for connection...");
+            server.Blocking = false;
         }
 
-        try
+        void Update()
         {
-            for (int i = 0; i < clients.Count; i++)
+            try
             {
-                if (clients[i].Available > 0)
+                clients.Add(server.Accept());
+
+                if (playerColorData.Count > 0)
                 {
-                    byte[] buffer = new byte[clients[i].Available];
-                    clients[i].Receive(buffer);
-
-                    for (int j = 0; j < clients.Count; j++)
+                    for (int i = 0; i < clients.Count; i++)
                     {
-                        if (i == j)
-                            continue;
+                        byte[] buffer = new PlayersColorDataPacket(serverPayerData, playerColorData).Serialize();
+                        clients[i].Send(buffer);
+                    }
+                }
 
-                        clients[j].Send(buffer);
+                Debug.LogError("Client connected!");
+            }
+            catch (SocketException e)
+            {
+                if (e.SocketErrorCode != SocketError.WouldBlock)
+                {
+                    Debug.LogError(e.ToString());
+                }
+            }
+
+            try
+            {
+                for (int i = 0; i < clients.Count; i++)
+                {
+                    if (clients[i].Available > 0)
+                    {
+                        byte[] buffer = new byte[clients[i].Available];
+                        clients[i].Receive(buffer);
+
+                        BasePacket bp = new BasePacket();
+                        bp.Deserialize(buffer);
+
+                        switch (bp.packetType)
+                        {
+                            case BasePacket.PacketType.Color:
+                                ColorPacket cp = new ColorPacket().Deserialize(buffer);
+                                playerColorData.Add(new PlayerColorData(bp.playerData, cp.ColorIndex));
+                                break;
+                        }
+
+                        for (int j = 0; j < clients.Count; j++)
+                        {
+                            if (i == j)
+                                continue;
+
+                            clients[j].Send(buffer);
+                        }
                     }
                 }
             }
-        }
-        catch (SocketException e)
-        {
-            if (e.SocketErrorCode != SocketError.WouldBlock)
+            catch (SocketException e)
             {
-                Debug.LogError(e.ToString());
+                if (e.SocketErrorCode != SocketError.WouldBlock)
+                {
+                    Debug.LogError(e.ToString());
+                }
             }
         }
-    }
+    } 
 }
