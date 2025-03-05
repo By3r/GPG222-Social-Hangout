@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using TMPro;
 using UnityEngine;
 
 namespace JW
@@ -13,6 +14,9 @@ namespace JW
         // Network Manager Singleton
         public PlayerData playerData { get; private set; }
         public static NetworkManager instance { get; private set; }
+
+        // UI Variables
+        [SerializeField] private TMP_InputField usernameInput;
 
         private void Awake()
         {
@@ -42,6 +46,12 @@ namespace JW
 
         public void ConnectToServer(string username)
         {
+            if (string.IsNullOrEmpty(username))
+            {
+                Debug.LogError($"player is trying to connect without writing anything");
+                return;
+            }
+
             try
             {
                 playerData = new PlayerData(username, Random.Range(0, 999));
@@ -49,6 +59,7 @@ namespace JW
                 socket.Connect(ipAddress, port);
                 socket.Blocking = false;
                 ServerConnectEvent();
+                Debug.Log($"Connected to server as {username}!");
             }
             catch (SocketException e)
             {

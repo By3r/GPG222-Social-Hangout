@@ -7,8 +7,8 @@ namespace JW
 {
     public class Server : MonoBehaviour
     {
-        [SerializeField] string ipAddress;
-        [SerializeField] int port;
+        [SerializeField] string ipAddress = "127.0.0.1"; // this is local network ip
+        [SerializeField] int port = 7777; // general unity based networking port according to google to avoid failed binding
         Socket server;
 
         List<Socket> clients = new();
@@ -19,9 +19,10 @@ namespace JW
             // Spinning up the server
             server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             server.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
-            server.Listen(1000);
-            Debug.LogError("Waiting For Connection ...");
             server.Blocking = false; // CContinue on with your life my guy!
+            server.Listen(1000);
+            Debug.Log("Waiting For Connection...");
+            
         }
 
         // Update is called once per frame
@@ -69,5 +70,5 @@ namespace JW
                 }
             }
         }
-    } 
+    }
 }
