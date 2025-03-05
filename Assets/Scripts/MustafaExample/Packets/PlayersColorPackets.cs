@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Mustafa
 {
+#if Mustafa
     public class PlayersColorDataPacket : BasePacket
     {
         public List<PlayerColorData> PlayerColorData { get; private set; }
@@ -50,4 +51,5 @@ namespace Mustafa
             return this;
         }
     } 
+#endif
 }

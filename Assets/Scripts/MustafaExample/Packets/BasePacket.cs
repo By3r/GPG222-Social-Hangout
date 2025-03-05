@@ -2,6 +2,7 @@ using System.IO;
 
 namespace Mustafa
 {
+#if Mustafa
     public class BasePacket
     {
         protected MemoryStream msw;
@@ -55,4 +56,5 @@ namespace Mustafa
             playerData = new PlayerData(br.ReadString(), br.ReadInt32());
         }
     } 
+#endif
 }

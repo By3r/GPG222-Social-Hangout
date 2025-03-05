@@ -1,5 +1,6 @@
 namespace Mustafa
 {
+#if MUSTAFA
     public class MessagePacket : BasePacket
     {
         public string Message { get; private set; }
@@ -31,4 +32,5 @@ namespace Mustafa
             return this;
         }
     } 
+#endif
 }

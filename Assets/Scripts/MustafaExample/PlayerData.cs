@@ -1,5 +1,6 @@
 namespace Mustafa
 {
+#if MUSTAFA
     public class PlayerData
     {
         public string name { get; private set; }
@@ -11,4 +12,5 @@ namespace Mustafa
             this.tag = tag;
         }
     } 
+#endif
 }

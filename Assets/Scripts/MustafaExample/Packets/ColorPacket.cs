@@ -1,5 +1,6 @@
 namespace Mustafa
 {
+#if Mustafa
     public class ColorPacket : BasePacket
     {
         public int ColorIndex { get; private set; }
@@ -30,5 +31,5 @@ namespace Mustafa
             ColorIndex = br.ReadInt32();
             return this;
         }
-    } 
+#endif
 }

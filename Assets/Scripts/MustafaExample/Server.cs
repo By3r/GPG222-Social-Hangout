@@ -4,10 +4,9 @@ using System.Net;
 using UnityEngine;
 using System.IO;
 
-
-
 namespace Mustafa
 {
+#if MUSTAFA
     public class Server : MonoBehaviour
     {
         [SerializeField] string ipAddress;
@@ -94,4 +93,5 @@ namespace Mustafa
             }
         }
     } 
+#endif
 }

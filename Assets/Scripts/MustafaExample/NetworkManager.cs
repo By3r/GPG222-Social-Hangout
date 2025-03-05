@@ -5,6 +5,7 @@ using Mustafa;
 
 namespace Mustafa
 {
+#if Mustafa
     public class NetworkManager : NetworkEvents
     {
         [SerializeField] string ipAddress;
@@ -108,4 +109,5 @@ namespace Mustafa
             }
         }
     } 
+#endif
 }

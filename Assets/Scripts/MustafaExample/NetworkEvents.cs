@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Mustafa
 {
+#if MUSTAFA
     public class NetworkEvents : MonoBehaviour
     {
         public delegate void ServerConnect();
@@ -20,5 +21,7 @@ namespace Mustafa
 
         public delegate void ColorReceived(PlayerData playerData, int colorIndex);
         public ColorReceived ColorReceivedEvent;
-    } 
+
+    }
+#endif
 }

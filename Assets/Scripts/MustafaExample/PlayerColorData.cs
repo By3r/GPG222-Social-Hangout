@@ -1,5 +1,6 @@
 namespace Mustafa
 {
+#if MUSTAFA
     public class PlayerColorData
     {
         public PlayerData playerData;
@@ -11,4 +12,5 @@ namespace Mustafa
             this.colorIndex = colorIndex;
         }
     } 
+#endif
 }
