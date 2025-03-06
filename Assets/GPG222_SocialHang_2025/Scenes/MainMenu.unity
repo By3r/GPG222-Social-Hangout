@@ -2454,7 +2454,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ipAddress: 127.0.0.1
-  port: 7777
+  port: 5500
 --- !u!1 &2113765937
 GameObject:
   m_ObjectHideFlags: 0
