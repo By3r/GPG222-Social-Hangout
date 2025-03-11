@@ -1,26 +1,27 @@
-using System.Net.Sockets;
-using TMPro;
+using JW.Dana.PlayerInformation;
+using System.Text;
+using Dana.JW.Client;
 using UnityEngine;
 
 namespace JW
 {
     public class NetworkManager : NetworkEvents
     {
-        // Networking Variables
+        [Header("Networking Variables")]
+        [Tooltip("Make sure it's the same as the server's ip address.")]
         [SerializeField] private string ipAddress;
+        [Tooltip("Make sure it is the same as the server's port.")]
         [SerializeField] private int port;
-        Socket socket;
+        [Tooltip("Assign this space with the client script.")]
+        private Client client;
+        public Client Client => client; // ------------------- D exposed client for other scripts to subscribe
 
         // Network Manager Singleton
         public PlayerData playerData { get; private set; }
         public static NetworkManager instance { get; private set; }
 
-        // UI Variables
-        [SerializeField] private TMP_InputField usernameInput;
-
         private void Awake()
         {
-            // Set up and maintain singleton
             if (instance == null)
             {
                 instance = this;
@@ -32,18 +33,23 @@ namespace JW
             }
         }
 
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
+        private void Start()
         {
-
+            client = new Client();
+            client.OnMessageReceived += HandleMessageReceived;
+            client.OnError += HandleError;
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Update()
         {
-
+            client?.EncodeMessage(Encoding.Unicode);
         }
 
+        /// <summary>
+        /// Connects to the server using the username players have entered.
+        /// creates a random tag and color and assigns it to the player.
+        /// Sends a player has joined message.
+        /// </summary>
         public void ConnectToServer(string username)
         {
             if (string.IsNullOrEmpty(username))
@@ -52,23 +58,28 @@ namespace JW
                 return;
             }
 
-            try
-            {
-                playerData = new PlayerData(username, Random.Range(0, 999));
+            int randomTag = Random.Range(0, 999);
+            Color randomColor = new Color(Random.value, Random.value, Random.value);
+            string hexColor = "#" + ColorUtility.ToHtmlStringRGB(randomColor);
 
-                socket.Connect(ipAddress, port);
-                socket.Blocking = false;
-                ServerConnectEvent();
-                Debug.Log($"Connected to server as {username}!");
-            }
-            catch (SocketException e)
-            {
-                if (e.SocketErrorCode != SocketError.WouldBlock)
-                {
-                    Debug.LogError(e.ToString());
-                }
-                throw;
-            }
+            playerData = new PlayerData(username, randomTag, hexColor);
+            client.Connect(ipAddress, port);
+
+            string joinMsg = $"JOIN:{playerData.Name}:{playerData.Tag}:{playerData.Color}";
+            client.Send(joinMsg, Encoding.Unicode);
+
+            ServerConnectEvent?.Invoke();
+            Debug.Log($"{username} has just connected to the server...");
         }
-    } 
+
+        private void HandleMessageReceived(string message)
+        {
+            // It is here for the potential chat system we'll have lol -------------------- D
+        }
+
+        private void HandleError(string error)
+        {
+            Debug.LogError(error);
+        }
+    }
 }
