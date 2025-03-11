@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using UnityEngine;
 
 namespace JW
@@ -8,30 +9,29 @@ namespace JW
     public class Server : MonoBehaviour
     {
         [SerializeField] string ipAddress = "127.0.0.1"; // this is local network ip
-        [SerializeField] int port = 7777; // general unity based networking port according to google to avoid failed binding
-        Socket server;
+        [SerializeField] int port = 5500; // general unity based networking port according to google to avoid failed binding
+        private Socket serverSocket;
+        private List<Socket> clients = new List<Socket>();
 
-        List<Socket> clients = new();
-
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
             // Spinning up the server
-            server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            server.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
-            server.Blocking = false; // CContinue on with your life my guy!
-            server.Listen(1000);
+            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            serverSocket.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
+            serverSocket.Blocking = false;
+            serverSocket.Listen(1000);
             Debug.Log("Waiting For Connection...");
-            
+
         }
 
-        // Update is called once per frame
         void Update()
         {
             // Attempt to catch a client
             try
             {
-                clients.Add(server.Accept());
+                Socket clientSocket = serverSocket.Accept();
+                clientSocket.Blocking = false;
+                clients.Add(clientSocket);
                 Debug.LogError("Client connected!");
             }
             catch (SocketException e)
@@ -42,32 +42,62 @@ namespace JW
                 }
             }
 
-            // Check for package delivery
-            try
+            for (int i = clients.Count - 1; i >= 0; i--)
             {
-                for (int i = 0; i < clients.Count; i++) // go tghrough everyone and look for a package delivery
+                Socket client = clients[i];
+
+                if (!IsSocketConnected(client))
                 {
-                    if (clients[i].Available > 0) // Package delivery
+                    Debug.Log($"Client has disconnected");
+                    client.Close();
+                    clients.RemoveAt(i);
+                    continue;
+                }
+
+                try
+                {
+                    if (client.Available > 0)
                     {
-                        byte[] buffer = new byte[clients[i].Available];
-                        clients[i].Receive(buffer);
-
-                        for (int j = 0; j < clients.Count; j++) // Send the same package to everyone else
+                        byte[] buffer = new byte[client.Available];
+                        int received = client.Receive(buffer);
+                        if (received > 0)
                         {
-                            if (i == j) // Skip yourself
-                                continue;
+                            string message = Encoding.UTF8.GetString(buffer, 0, received);
+                            Debug.Log("Received: " + message);
 
-                            clients[j].Send(buffer);
+
+                            foreach (Socket otherClient in clients)
+                            {
+                                if (otherClient.Connected)
+                                {
+                                    otherClient.Send(buffer);
+                                }
+                            }
                         }
                     }
                 }
-            }
-            catch (SocketException e) // No users joined yet ;(
-            {
-                if (e.SocketErrorCode != SocketError.WouldBlock)
+                catch (SocketException e)
                 {
-                    Debug.LogError(e.ToString());
+                    if (e.SocketErrorCode != SocketError.WouldBlock)
+                    {
+                        Debug.LogError(e.ToString());
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Checks whether a given socket is still connected or nott.
+        /// </summary>
+        private bool IsSocketConnected(Socket s)
+        {
+            try
+            {
+                return !(s.Poll(1, SelectMode.SelectRead) && s.Available == 0);
+            }
+            catch (SocketException)
+            {
+                return false;
             }
         }
     }

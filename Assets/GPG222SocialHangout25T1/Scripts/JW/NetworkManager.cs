@@ -11,7 +11,7 @@ namespace JW
         [Tooltip("Make sure it's the same as the server's ip address.")]
         [SerializeField] private string ipAddress;
         [Tooltip("Make sure it is the same as the server's port.")]
-        [SerializeField] private int port;
+        [SerializeField] private int port = 5500;
         [Tooltip("Assign this space with the client script.")]
         private Client client;
         public Client Client => client; // ------------------- D exposed client for other scripts to subscribe
