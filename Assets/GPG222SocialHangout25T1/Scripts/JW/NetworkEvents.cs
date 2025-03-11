@@ -6,5 +6,5 @@ namespace JW
 	{
 		public delegate void ServerConnect();
 		public ServerConnect ServerConnectEvent;
-	}  
+	}
 }

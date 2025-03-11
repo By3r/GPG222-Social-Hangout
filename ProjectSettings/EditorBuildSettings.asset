@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/GPG222SocialHangout25T1/Scenes/MainMenu.unity
+    guid: da45c9d54258a7545a614bb4050f8e80
+  - enabled: 1
+    path: Assets/GPG222SocialHangout25T1/Scenes/GameLobby.unity
+    guid: ef15a430db22565488b95d6d59bb0717
   m_configObjects: {}
