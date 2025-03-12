@@ -19,21 +19,21 @@ namespace JW
 			PlayersColorData
 		}
 		public PacketType packetType;
-		public PlayerData playerData;
+		// public PlayerData playerData; --------------------------- D I commented it out
 		#endregion
 
 		#region Constructors
 		public BasePacket()
 		{
 			packetType = PacketType.None;
-			playerData = null;
+			// playerData = null; --------------------------------- D I commented it out
 		}
 
-		public BasePacket(PacketType packetType, PlayerData playerData)
-		{
-			this.packetType = packetType;
-			this.playerData = playerData;
-		} 
+		//public BasePacket(PacketType packetType, PlayerData playerData) ---------- D I commented it out
+		//{
+		//	this.packetType = packetType;
+		//	this.playerData = playerData;
+		//} 
 		#endregion
 
 		/// <summary>
@@ -47,8 +47,8 @@ namespace JW
 
 			// Serialize Data
 			binaryWriter.Write((int)packetType);
-			binaryWriter.Write(playerData.Name);
-			binaryWriter.Write(playerData.Tag);
+			// binaryWriter.Write(playerData.Name); ----------------- D I commented it out
+			// binaryWriter.Write(playerData.Tag); ------------------- D I commented it out
 		}
 
 		protected byte[] EndSerialize()
@@ -64,7 +64,7 @@ namespace JW
 
 			// Decodes the packet data and playerData
 			packetType = (PacketType)binaryReader.ReadInt32();
-			playerData = new PlayerData(binaryReader.ReadString(), binaryReader.ReadInt32());
+			// playerData = new PlayerData(binaryReader.ReadString(), binaryReader.ReadInt32()); ------------- D I commented it out
 		}
 	} 
 }

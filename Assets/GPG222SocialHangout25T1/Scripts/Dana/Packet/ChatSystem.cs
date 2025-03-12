@@ -52,9 +52,7 @@ namespace Dana.ChatSystem
         #region Private Functions
         private void OnMessageReceived(string rawMessage)
         {
-            // Expected formats:
-            // JOIN:username:tag:color
-            // CHAT:username:tag:color:message text
+            // I will be removing the chat colour appearing next to the player.
             string[] parts = rawMessage.Split(':');
             if (parts.Length < 2)
                 return;
@@ -73,20 +71,21 @@ namespace Dana.ChatSystem
                 string username = parts[1];
                 string tag = parts[2];
                 string color = parts[3];
-                // In case the message text includes colons, join remaining parts.
+
+                // Format used: String "color = colourname username, /color"
                 string chatText = string.Join(":", parts.Skip(4).ToArray());
                 string formatted = $"<color={color}>{username}#{tag}</color>: <color=white>{chatText}</color>";
                 AppendMessage(formatted);
             }
             else
             {
-                AppendMessage(rawMessage); // Fallback for unrecognized formats.
+                AppendMessage(rawMessage); 
             }
         }
 
         private void AppendMessage(string message)
         {
-            chatLog.text += "\n" + message;
+            chatLog.text += "\n" + message; 
         }
         #endregion
     }
