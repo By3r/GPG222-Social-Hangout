@@ -334,7 +334,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 620574788}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1250024992}
+        m_TargetAssemblyTypeName: Dana.ChatSystem.ChatSystem, Assembly-CSharp
+        m_MethodName: OnSendButtonClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &620574788
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,7 +395,6 @@ GameObject:
   m_Component:
   - component: {fileID: 690878986}
   - component: {fileID: 690878985}
-  - component: {fileID: 690878984}
   m_Layer: 0
   m_Name: Main Camera (3)
   m_TagString: MainCamera
@@ -391,14 +402,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &690878984
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 690878983}
-  m_Enabled: 1
 --- !u!20 &690878985
 Camera:
   m_ObjectHideFlags: 0
@@ -792,7 +795,6 @@ GameObject:
   m_Component:
   - component: {fileID: 942622763}
   - component: {fileID: 942622762}
-  - component: {fileID: 942622761}
   m_Layer: 0
   m_Name: Main Camera (2)
   m_TagString: MainCamera
@@ -800,14 +802,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &942622761
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 942622760}
-  m_Enabled: 1
 --- !u!20 &942622762
 Camera:
   m_ObjectHideFlags: 0
@@ -1569,7 +1563,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1718757553}
   - component: {fileID: 1718757552}
-  - component: {fileID: 1718757551}
   m_Layer: 0
   m_Name: Main Camera (1)
   m_TagString: MainCamera
@@ -1577,14 +1570,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &1718757551
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1718757550}
-  m_Enabled: 1
 --- !u!20 &1718757552
 Camera:
   m_ObjectHideFlags: 0

@@ -575,7 +575,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1493676794}
+      - m_Target: {fileID: 724015130}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: OnConnectButtonClicked
         m_Mode: 1
@@ -637,6 +637,7 @@ GameObject:
   - component: {fileID: 724015128}
   - component: {fileID: 724015127}
   - component: {fileID: 724015126}
+  - component: {fileID: 724015130}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -732,6 +733,27 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &724015130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 724015125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5f09e162f9bd654d80b416058f8792f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  usernameInput: {fileID: 2075563521}
+  feedbackMessages: {fileID: 1015467102}
+  creditsPanel: {fileID: 740848679}
+  loadingPanel: {fileID: 830612826}
+  characterButtons:
+  - {fileID: 2114593800}
+  - {fileID: 1557098149}
+  - {fileID: 1223745648}
+  - {fileID: 2007912366}
 --- !u!1 &729717738
 GameObject:
   m_ObjectHideFlags: 0
@@ -1580,7 +1602,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1493676794}
+      - m_Target: {fileID: 724015130}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -1949,87 +1971,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1303907823}
   m_CullTransparentMesh: 1
---- !u!1 &1493676789
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1493676790}
-  - component: {fileID: 1493676793}
-  - component: {fileID: 1493676792}
-  - component: {fileID: 1493676794}
-  m_Layer: 0
-  m_Name: --- Scripts ---
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1493676790
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1493676789}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.000015258789, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1493676792
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1493676789}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e2b2f7d15a291c4abc465d1b5322137, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ipAddress: 192.168.1.135
-  port: 5500
---- !u!114 &1493676793
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1493676789}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28cc79c2a831a7e42b350653ce5aff60, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1493676794
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1493676789}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c5f09e162f9bd654d80b416058f8792f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  usernameInput: {fileID: 2075563521}
-  feedbackMessages: {fileID: 1015467102}
-  creditsPanel: {fileID: 740848679}
-  loadingPanel: {fileID: 830612826}
-  characterButtons:
-  - {fileID: 2114593800}
-  - {fileID: 1557098149}
-  - {fileID: 1223745648}
-  - {fileID: 2007912366}
 --- !u!1 &1537916944
 GameObject:
   m_ObjectHideFlags: 0
@@ -2165,7 +2106,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1493676794}
+      - m_Target: {fileID: 724015130}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -3123,7 +3064,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1493676794}
+      - m_Target: {fileID: 724015130}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -3565,7 +3506,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1493676794}
+      - m_Target: {fileID: 724015130}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -3615,14 +3556,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2114593798}
   m_CullTransparentMesh: 1
+--- !u!1 &2116616170
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2116616173}
+  - component: {fileID: 2116616172}
+  - component: {fileID: 2116616171}
+  m_Layer: 0
+  m_Name: --- Do Not Destroy ---
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2116616171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2116616170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e2b2f7d15a291c4abc465d1b5322137, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ipAddress: 192.168.1.135
+  port: 5500
+--- !u!114 &2116616172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2116616170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28cc79c2a831a7e42b350653ce5aff60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &2116616173
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2116616170}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.000015258789, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 102416784}
-  - {fileID: 724015129}
-  - {fileID: 1493676790}
-  - {fileID: 1920096958}
-  - {fileID: 641145633}
+  - {fileID: 2116616173}
   - {fileID: 842983351}
   - {fileID: 531173960}
+  - {fileID: 102416784}
+  - {fileID: 724015129}
+  - {fileID: 1920096958}
+  - {fileID: 641145633}
