@@ -1,10 +1,10 @@
-﻿using JW.Dana.PlayerInformation;
-using System.Text;
+﻿using Dana.Shared.PlayerInformation;
+using Dana.Shared.Packets;
 using Dana.JW.Client;
+using Dana.ChatSystem;
 using UnityEngine;
-using TMPro;
-using System;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 namespace JW.Dana.BaseNetwork
 {
@@ -39,95 +39,81 @@ namespace JW.Dana.BaseNetwork
         private void Start()
         {
             client = new Client();
-            client.OnMessageReceived += HandleMessageReceived;
-            client.OnError += HandleError;
+            client.OnPacketReceived += HandlePacketReceived;
+            client.OnError += Debug.LogError;
+            client.Connect(ipAddress, port);
         }
 
         private void Update()
         {
-            client?.EncodeMessage(Encoding.Unicode);
+            client?.ProcessIncomingData();
         }
 
         #region Public Functions
-        public void RequestCharacterSelection(string username, int characterID)
-        {
-            client.Connect(ipAddress, port);
-            string checkCharacterMsg = $"CHECK:{characterID}";
-            client.Send(checkCharacterMsg, Encoding.Unicode);
-        }
-
         /// <summary>
         /// Connects to the server using the username players have entered.
-        /// creates a random tag and color and assigns it to the player.
+        /// Assigns a colour to the player.
         /// Sends a player has joined message.
         /// </summary>
         public void ConnectToServer(string username, int characterID)
         {
-            int randomTag = UnityEngine.Random.Range(0, 999);
-            Color randomColor = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
-            string hexColor = "#" + ColorUtility.ToHtmlStringRGB(randomColor);
+            if (playerData == null)
+            {
+                int randomTag = UnityEngine.Random.Range(0, 999);
+                // Map duck selection (characterID) to a specific colour:
+                string selectedColor = characterID switch
+                {
+                    0 => "#FF0000",   // Hot Red
+                    1 => "#0000FF",   // Bluee Bluee
+                    2 => "#800080",   // Just Purpoe
+                    3 => "#008000",   // Vert
+                    _ => "#FFFFFF"    // Whites === _ as in default
+                };
 
-            playerData = new PlayerData(username, randomTag, hexColor, characterID);
+                playerData = new PlayerData(username, randomTag, selectedColor, characterID);
+            }
 
-            string joinMsg = $"JOIN:{playerData.Name}:{playerData.Tag}:{playerData.Color}:{playerData.CharacterID}";
+            Debug.Log($"PlayerData Initialised as {playerData.Name}, {playerData.Tag}, {playerData.Color}, {playerData.CharacterID}");
 
-            client.Send(joinMsg, Encoding.Unicode);
+            client.SendPacket(new JoinPacket(playerData.Name, playerData.CharacterID));
+        }
+
+        public void RequestCharacterSelection(string username, int characterID)
+        {
+            ConnectToServer(username, characterID);
+            client.SendPacket(new DuckSelectPacket(characterID));
         }
         #endregion
 
         #region Private Functions
-        private void HandleMessageReceived(string message)
+        private void HandlePacketReceived(IPacket packet)
         {
-            Debug.Log($"📩 Client received raw message: '{message}' (Length: {message.Length})");
-
-            if (string.IsNullOrEmpty(message))
+            switch (packet)
             {
-                Debug.LogError("Received empty message, ignoring...");
-                return;
-            }
+                case DuckOwnershipPacket statusPacket:
+                    InvokeCharacterAvailabilityEvent(statusPacket.duckID, statusPacket.isTaken);
 
-            string[] parts = message.Split(':');
+                    if (!statusPacket.isTaken)
+                    {
+                        client.SendPacket(new JoinPacket(playerData.Name, playerData.CharacterID));
+                    }
+                    break;
 
-            if (parts[0] == "CHARACTER_STATUS" && parts.Length >= 3)
-            {
-                int characterID = int.Parse(parts[1]);
-                bool isTaken = parts[2] == "1";
+                case JoinPacket:
+                    Debug.Log("Loading game...");
+                    StartCoroutine(LoadGameSceneAfterDelay());
+                    break;
 
-                Debug.Log($" [Step 7] Client received CHARACTER_STATUS: {characterID} {(isTaken ? "TAKEN" : "AVAILABLE")}");
-                InvokeCharacterAvailabilityEvent(characterID, isTaken);
-
-                if (!isTaken)
-                {
-                    Debug.Log($" [Step 8] Sending CHARACTER_SELECT request for Character ID: {characterID}");
-                    client.Send($"CHARACTER_SELECT:{characterID}", Encoding.Unicode);
-                }
-            }
-            else if (parts[0] == "CHARACTER_ACCEPTED")
-            {
-                if (parts.Length < 3)
-                {
-                    Debug.LogError("❌ [Step none] CHARACTER_ACCEPTED message is incomplete.");
-                    return;
-                }
-
-                string username = parts[1];
-                int characterID = int.Parse(parts[2]);
-
-                ConnectToServer(username, characterID);
-            }
-            else if (message.Trim() == "JOIN_SUCCESS")
-            {
-                SceneManager.LoadScene(1);
-            }
-            else if (parts[0] == "CHARACTER_TAKEN")
-            {
-                Debug.LogError("Character is already taken...."); // ------ Will debug to feedbacktext later
+                case ChatPacket chatPacket:
+                    Debug.Log($"Chat message: {chatPacket.message}");
+                    break;
             }
         }
 
-        private void HandleError(string error)
+        private IEnumerator LoadGameSceneAfterDelay()
         {
-            Debug.LogError(error);
+            yield return new WaitForSeconds(0.5f);
+            SceneManager.LoadScene(1);
         }
         #endregion
     }

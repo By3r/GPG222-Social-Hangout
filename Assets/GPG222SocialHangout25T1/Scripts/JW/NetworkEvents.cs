@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace JW
+namespace JW.Dana.BaseNetwork
 {
     public class NetworkEvents : MonoBehaviour
     {

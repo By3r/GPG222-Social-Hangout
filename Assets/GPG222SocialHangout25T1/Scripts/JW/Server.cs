@@ -1,18 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using UnityEngine;
+using Dana.Shared.Packets;
+using UnityEngine;\
 
-namespace JW.Dana.Server
+namespace Dana.Shared.Server
 {
     public class Server : MonoBehaviour
     {
+        #region Variables
         [SerializeField] string ipAddress = "127.0.0.1"; // this is local network ip
         [SerializeField] int port = 5500; // general unity based networking port according to google to avoid failed binding
         private Socket serverSocket;
         private List<Socket> clients = new List<Socket>();
-        private Dictionary<int, int> characterOwnership = new(); 
+        private Dictionary<int, int> characterOwnership = new();
+        #endregion
 
         void Start()
         {
@@ -26,6 +28,12 @@ namespace JW.Dana.Server
         }
 
         void Update()
+        {
+            AcceptClients();
+            ProcessClientMessages();
+        }
+
+        private void AcceptClients()
         {
             // Attempt to catch a client
             try
@@ -42,7 +50,11 @@ namespace JW.Dana.Server
                     Debug.LogError(e.ToString());
                 }
             }
+        }
 
+
+        private void ProcessClientMessages()
+        {
             for (int i = clients.Count - 1; i >= 0; i--)
             {
                 Socket client = clients[i];
@@ -63,62 +75,7 @@ namespace JW.Dana.Server
                         int received = client.Receive(buffer);
                         if (received > 0)
                         {
-                            string message = Encoding.Unicode.GetString(buffer, 0, received).Trim();
-
-                            string[] parts = message.Split(':');
-                            if (parts.Length < 2)
-                            {
-                                continue;
-                            }
-                            if (parts[0] == "CHECK" && parts.Length >= 2)
-                            {
-                                int characterID;
-                                if (!int.TryParse(parts[1], out characterID))
-                                {
-                                    return;
-                                }
-
-                                bool isTaken = characterOwnership.ContainsKey(characterID);
-                                string response = $"CHARACTER_STATUS:{characterID}:{(isTaken ? "1" : "0")}";
-
-                                client.Send(Encoding.Unicode.GetBytes(response));
-                                return;
-                            }
-                            if (parts[0] == "CHARACTER_SELECT" && parts.Length >= 2)
-                            {
-                                int characterID = int.Parse(parts[1]);
-                                string username = "UnknownPlayer";
-
-                                if (clients.Count > 0)
-                                {
-                                    username = $"Player{clients.Count}";
-                                }
-
-                                string response = $"CHARACTER_ACCEPTED:{username}:{characterID}";
-                                client.Send(Encoding.Unicode.GetBytes(response));
-                            }
-
-                            else if (parts[0] == "JOIN" && parts.Length >= 5)
-                            {
-                                string username = parts[1];
-                                int tag = int.Parse(parts[2]);
-                                string color = parts[3];
-                                int characterID = int.Parse(parts[4]);
-
-                                if (characterOwnership.ContainsKey(characterID))
-                                {
-                                    client.Send(Encoding.Unicode.GetBytes("CHARACTER_TAKEN"));
-                                    continue;
-                                }
-                                characterOwnership[characterID] = tag;
-                                BroadcastAllConnectedClients(message);
-                                client.Send(Encoding.Unicode.GetBytes("JOIN:" + username + ":" + tag + ":" + color + ":" + characterID + "\n"));
-                                client.Send(Encoding.Unicode.GetBytes("JOIN_SUCCESS\n")); // ----- into a new line so that it can be recognised as separate than the previous join messsage
-                            }
-                            else if (parts[0] == "CHAT" && parts.Length >= 5)
-                            {
-                                BroadcastAllConnectedClients(message);
-                            }
+                            HandlePacket(client, buffer);
                         }
                     }
                 }
@@ -132,22 +89,52 @@ namespace JW.Dana.Server
             }
         }
 
-        private void BroadcastAllConnectedClients(string message)
+        private void HandlePacket(Socket client, byte[] buffer)
         {
-            byte[] buffer = Encoding.Unicode.GetBytes(message);
-            Debug.Log($"📡 Broadcasting: '{message}' to {clients.Count} clients");
-            foreach (Socket otherClient in clients)
+            IPacket packet = PacketHandler.DeserializePacket(buffer);
+
+            switch (packet)
             {
-                if (otherClient.Connected)
+                case JoinPacket:
+                    Debug.Log("Received JoinPacket");
+                    BroadcastToAllClients(packet);
+                    break;
+
+                case ChatPacket chatPacket:
+                    Debug.Log($"Received ChatPacket from {chatPacket.senderUsername}: {chatPacket.message}");
+                    BroadcastToAllClients(chatPacket);
+                    break;
+
+                case DuckSelectPacket characterSelect:
+                    bool isTaken = characterOwnership.ContainsKey(characterSelect.characterID);
+                    DuckOwnershipPacket responsePacket = new DuckOwnershipPacket(characterSelect.characterID, isTaken);
+                    client.Send(responsePacket.SerializeChatPackets());
+
+                    if (!isTaken)
+                    {
+                        characterOwnership[characterSelect.characterID] = clients.IndexOf(client);
+                        BroadcastToAllClients(characterSelect);
+                    }
+                    break;
+            }
+        }
+
+
+        private void BroadcastToAllClients(IPacket packet)
+        {
+            byte[] buffer = packet.SerializeChatPackets();
+            Debug.Log($"📡 Broadcasting Packet: {packet.PacketType} to {clients.Count} clients");
+
+            foreach (Socket client in clients)
+            {
+                if (client.Connected)
                 {
-                    otherClient.Send(buffer);
+                    client.Send(buffer);
                 }
             }
         }
 
-        /// <summary>
-        /// Checks whether a given socket is still connected or not.
-        /// </summary>
+
         private bool IsSocketConnected(Socket s)
         {
             try
@@ -159,5 +146,6 @@ namespace JW.Dana.Server
                 return false;
             }
         }
+
     }
 }

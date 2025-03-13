@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
-using System.Text;
-using UnityEngine;
+using Dana.Shared.Packets;
 
 namespace Dana.JW.Client
 {
@@ -11,17 +10,11 @@ namespace Dana.JW.Client
         public Socket Socket { get; private set; }
         public bool Connected => Socket != null && Socket.Connected;
 
-        // Events for incoming messages and errors.
-        public event Action<string> OnMessageReceived;
+        public event Action<IPacket> OnPacketReceived;
         public event Action<string> OnError;
         #endregion
 
         #region Public Functions
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ipAddress"></param>
-        /// <param name="port"></param>
         public void Connect(string ipAddress, int port)
         {
             try
@@ -36,25 +29,16 @@ namespace Dana.JW.Client
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="encoding"></param>
-        public void Send(string message, Encoding encoding)
+        public void SendPacket(IPacket packet)
         {
             if (Connected)
             {
-                byte[] bytes = encoding.GetBytes(message);
+                byte[] bytes = packet.SerializeChatPackets();
                 Socket.Send(bytes);
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="encoding"></param>
-        public void EncodeMessage(Encoding encoding)
+        public void ProcessIncomingData()
         {
             if (Connected && Socket.Available > 0)
             {
@@ -65,13 +49,8 @@ namespace Dana.JW.Client
 
                     if (received > 0)
                     {
-                        string rawData = encoding.GetString(buffer, 0, received);
-                        string[] messages = rawData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
-                        foreach (string message in messages)
-                        {
-                            OnMessageReceived?.Invoke(message.Trim());
-                        }
+                        IPacket packet = PacketHandler.DeserializePacket(buffer);
+                        OnPacketReceived?.Invoke(packet);
                     }
                 }
                 catch (SocketException e)

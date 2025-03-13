@@ -1,4 +1,4 @@
-namespace JW.Dana.PlayerInformation
+namespace Dana.Shared.PlayerInformation
 {
     public class PlayerData
     {

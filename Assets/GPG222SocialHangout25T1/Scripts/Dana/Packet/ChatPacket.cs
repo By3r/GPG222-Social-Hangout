@@ -17,14 +17,14 @@ namespace Dana.Shared.Packets
             this.senderColor = senderColor;
         }
 
-        public byte[] SerializeChatPackets()  
+        public byte[] SerializeChatPackets()
         {
             using MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.Unicode);
             writer.Write((int)PacketType);
             writer.Write(senderUsername);
             writer.Write(message);
-            writer.Write(senderColor);
+            writer.Write(senderColor); 
             return stream.ToArray();
         }
 
@@ -32,11 +32,16 @@ namespace Dana.Shared.Packets
         {
             using MemoryStream stream = new MemoryStream(buffer);
             using BinaryReader reader = new BinaryReader(stream, Encoding.Unicode);
-            reader.ReadInt32(); 
+            reader.ReadInt32();
             string sender = reader.ReadString();
             string message = reader.ReadString();
-            string color = reader.ReadString();
+            string color = "#FFFFFF";
+            if (stream.Position < stream.Length)
+            {
+                color = reader.ReadString();
+            }
             return new ChatPacket(sender, message, color);
         }
+
     }
 }

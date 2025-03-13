@@ -3,6 +3,7 @@ using UnityEngine;
 using JW.Dana.BaseNetwork;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using Dana.Shared.Packets;
 
 namespace Dana.UI
 {
@@ -31,20 +32,22 @@ namespace Dana.UI
 
             if (string.IsNullOrEmpty(username))
             {
-                feedbackMessages.text = "Username cant be empty";
+                feedbackMessages.text = "You didn't bother writing a username? really?";
+                Debug.LogError("USername is emptyyy");
                 return;
             }
 
             if (selectedCharacter == -1)
             {
-                feedbackMessages.text = "You must select a character before connecting";
+                feedbackMessages.text = "Select a duck before connecting";
+                Debug.LogError("cant proceed wthout selecting a duck.");
                 return;
             }
 
-            Debug.Log($"Requesting character selection for {username} with Character ID: {selectedCharacter}");
+            Debug.Log($"Sending a join req: senderUsername: {username}, Character: {selectedCharacter}");
             loadingPanel.SetActive(true);
 
-            NetworkManager.instance.RequestCharacterSelection(username, selectedCharacter);
+            NetworkManager.instance.ConnectToServer(username, selectedCharacter);
         }
 
         public void SelectCharacter(int characterID)
