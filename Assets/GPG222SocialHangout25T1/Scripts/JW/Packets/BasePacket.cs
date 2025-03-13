@@ -17,7 +17,8 @@ namespace JW
 			None,
 			Message,
 			Color,
-			PlayersColorData
+			PlayersColorData,
+			Float3
 		}
 		public PacketType packetType;
 		public PlayerData playerData;

@@ -87,7 +87,7 @@ namespace JW
         }
 
         /// <summary>
-        /// Checks whether a given socket is still connected or nott.
+        /// Checks whether a given socket is still connected or not.
         /// </summary>
         private bool IsSocketConnected(Socket s)
         {
