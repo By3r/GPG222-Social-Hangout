@@ -1,4 +1,5 @@
 using System.IO;
+using Dana.Shared.PlayerInformation;
 
 namespace JW
 {
@@ -19,7 +20,8 @@ namespace JW
 			PlayersColorData
 		}
 		public PacketType packetType;
-		// public PlayerData playerData; --------------------------- D I commented it out
+		public PlayerData playerData; 
+
 		#endregion
 
 		#region Constructors
@@ -47,8 +49,8 @@ namespace JW
 
 			// Serialize Data
 			binaryWriter.Write((int)packetType);
-			// binaryWriter.Write(playerData.Name); ----------------- D I commented it out
-			// binaryWriter.Write(playerData.Tag); ------------------- D I commented it out
+			binaryWriter.Write(playerData.Name); 
+			binaryWriter.Write(playerData.Tag); 
 		}
 
 		protected byte[] EndSerialize()
@@ -64,7 +66,7 @@ namespace JW
 
 			// Decodes the packet data and playerData
 			packetType = (PacketType)binaryReader.ReadInt32();
-			// playerData = new PlayerData(binaryReader.ReadString(), binaryReader.ReadInt32()); ------------- D I commented it out
+			// playerData = new PlayerData(binaryReader.ReadString(), binaryReader.ReadInt32()); 
 		}
 	} 
 }
