@@ -2,6 +2,7 @@ using JW.Dana.PlayerInformation;
 using System.Text;
 using Dana.JW.Client;
 using UnityEngine;
+using TMPro;
 
 namespace JW
 {
