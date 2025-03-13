@@ -1,4 +1,5 @@
 using System.IO;
+using JW.Dana.PlayerInformation;
 
 namespace JW
 {
@@ -28,7 +29,7 @@ namespace JW
 			packetType = PacketType.None;
 			playerData = null;
 		}
-
+		
 		public BasePacket(PacketType packetType, PlayerData playerData)
 		{
 			this.packetType = packetType;
@@ -64,7 +65,7 @@ namespace JW
 
 			// Decodes the packet data and playerData
 			packetType = (PacketType)binaryReader.ReadInt32();
-			playerData = new PlayerData(binaryReader.ReadString(), binaryReader.ReadInt32());
+			playerData = new PlayerData(binaryReader.ReadString(), binaryReader.ReadInt32(), binaryReader.ReadString());
 		}
 	} 
 }

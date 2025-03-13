@@ -15,7 +15,7 @@ namespace JW
         [Tooltip("Assign this space with the client script.")]
         private Client client;
         public Client Client => client; // ------------------- D exposed client for other scripts to subscribe
-
+        
         // Network Manager Singleton
         public PlayerData playerData { get; private set; }
         public static NetworkManager instance { get; private set; }
