@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using UnityEngine;
 
-namespace Dana.JW.Client // --------------------------------------- I moved client related script from the network manager to the client script. You indirectly worked on this script lmao.
+namespace Dana.JW.Client
 {
     public class Client
     {
@@ -61,10 +62,16 @@ namespace Dana.JW.Client // --------------------------------------- I moved clie
                 {
                     byte[] buffer = new byte[Socket.Available];
                     int received = Socket.Receive(buffer);
+
                     if (received > 0)
                     {
-                        string message = encoding.GetString(buffer, 0, received);
-                        OnMessageReceived?.Invoke(message);
+                        string rawData = encoding.GetString(buffer, 0, received);
+                        string[] messages = rawData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+                        foreach (string message in messages)
+                        {
+                            OnMessageReceived?.Invoke(message.Trim());
+                        }
                     }
                 }
                 catch (SocketException e)

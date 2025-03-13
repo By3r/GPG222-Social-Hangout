@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-namespace JW
+namespace JW.Dana.Server
 {
     public class Server : MonoBehaviour
     {
@@ -12,6 +12,7 @@ namespace JW
         [SerializeField] int port = 5500; // general unity based networking port according to google to avoid failed binding
         private Socket serverSocket;
         private List<Socket> clients = new List<Socket>();
+        private Dictionary<int, int> characterOwnership = new(); 
 
         void Start()
         {
@@ -62,16 +63,61 @@ namespace JW
                         int received = client.Receive(buffer);
                         if (received > 0)
                         {
-                            string message = Encoding.UTF8.GetString(buffer, 0, received);
-                            Debug.Log("Received: " + message);
+                            string message = Encoding.Unicode.GetString(buffer, 0, received).Trim();
 
-
-                            foreach (Socket otherClient in clients)
+                            string[] parts = message.Split(':');
+                            if (parts.Length < 2)
                             {
-                                if (otherClient.Connected)
+                                continue;
+                            }
+                            if (parts[0] == "CHECK" && parts.Length >= 2)
+                            {
+                                int characterID;
+                                if (!int.TryParse(parts[1], out characterID))
                                 {
-                                    otherClient.Send(buffer);
+                                    return;
                                 }
+
+                                bool isTaken = characterOwnership.ContainsKey(characterID);
+                                string response = $"CHARACTER_STATUS:{characterID}:{(isTaken ? "1" : "0")}";
+
+                                client.Send(Encoding.Unicode.GetBytes(response));
+                                return;
+                            }
+                            if (parts[0] == "CHARACTER_SELECT" && parts.Length >= 2)
+                            {
+                                int characterID = int.Parse(parts[1]);
+                                string username = "UnknownPlayer";
+
+                                if (clients.Count > 0)
+                                {
+                                    username = $"Player{clients.Count}";
+                                }
+
+                                string response = $"CHARACTER_ACCEPTED:{username}:{characterID}";
+                                client.Send(Encoding.Unicode.GetBytes(response));
+                            }
+
+                            else if (parts[0] == "JOIN" && parts.Length >= 5)
+                            {
+                                string username = parts[1];
+                                int tag = int.Parse(parts[2]);
+                                string color = parts[3];
+                                int characterID = int.Parse(parts[4]);
+
+                                if (characterOwnership.ContainsKey(characterID))
+                                {
+                                    client.Send(Encoding.Unicode.GetBytes("CHARACTER_TAKEN"));
+                                    continue;
+                                }
+                                characterOwnership[characterID] = tag;
+                                BroadcastAllConnectedClients(message);
+                                client.Send(Encoding.Unicode.GetBytes("JOIN:" + username + ":" + tag + ":" + color + ":" + characterID + "\n"));
+                                client.Send(Encoding.Unicode.GetBytes("JOIN_SUCCESS\n")); // ----- into a new line so that it can be recognised as separate than the previous join messsage
+                            }
+                            else if (parts[0] == "CHAT" && parts.Length >= 5)
+                            {
+                                BroadcastAllConnectedClients(message);
                             }
                         }
                     }
@@ -80,8 +126,21 @@ namespace JW
                 {
                     if (e.SocketErrorCode != SocketError.WouldBlock)
                     {
-                        Debug.LogError(e.ToString());
+                        Debug.LogError($"Server receive error: {e}");
                     }
+                }
+            }
+        }
+
+        private void BroadcastAllConnectedClients(string message)
+        {
+            byte[] buffer = Encoding.Unicode.GetBytes(message);
+            Debug.Log($"📡 Broadcasting: '{message}' to {clients.Count} clients");
+            foreach (Socket otherClient in clients)
+            {
+                if (otherClient.Connected)
+                {
+                    otherClient.Send(buffer);
                 }
             }
         }

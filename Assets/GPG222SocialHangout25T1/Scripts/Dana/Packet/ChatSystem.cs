@@ -1,14 +1,13 @@
-using JW;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-
+using JW.Dana.BaseNetwork;
 namespace Dana.ChatSystem
 {
     /// <summary>
     /// 
     /// </summary>
-
+    /// 
     public class ChatSystem : MonoBehaviour
     {
         [SerializeField] private TMP_InputField chatInput;
@@ -79,13 +78,13 @@ namespace Dana.ChatSystem
             }
             else
             {
-                AppendMessage(rawMessage); 
+                AppendMessage(rawMessage);
             }
         }
 
         private void AppendMessage(string message)
         {
-            chatLog.text += "\n" + message; 
+            chatLog.text += "\n" + message;
         }
         #endregion
     }
