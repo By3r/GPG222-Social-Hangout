@@ -1,8 +1,7 @@
 using System.IO;
 using Dana.Shared.Packets;
-using Dana.Shared.PlayerInformation;
 
-namespace Dana.Shared.Packets
+namespace JW.Shared.Packets
 {
     /// <summary>
     /// This packet will contain 3 float values

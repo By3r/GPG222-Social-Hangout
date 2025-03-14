@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
-using Dana.ChatSystem;
+using JW.Shared.Packets;
 using JW.Syncing;
 
 namespace Dana.Shared.Packets

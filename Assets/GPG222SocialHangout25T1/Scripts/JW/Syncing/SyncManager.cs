@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Dana.JW.Client;
 using Dana.Shared.Packets;
 using JW.Dana.BaseNetwork;
-using JW.Syncing;
+using JW.Shared.Packets;
 using UnityEngine;
 
 namespace JW.Syncing
