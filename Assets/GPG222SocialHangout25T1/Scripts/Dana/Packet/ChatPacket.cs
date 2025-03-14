@@ -17,7 +17,7 @@ namespace Dana.Shared.Packets
             this.senderColor = senderColor;
         }
 
-        public byte[] SerializeChatPackets()
+        public byte[] SerializePacket()
         {
             using MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.Unicode);

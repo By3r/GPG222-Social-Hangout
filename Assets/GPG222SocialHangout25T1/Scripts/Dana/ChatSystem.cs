@@ -51,7 +51,7 @@ namespace Dana.ChatSystem
         {
             if (packet is ChatPacket chatPacket)
             {
-                Debug.Log($"Received ChatPacket with senderColor: {chatPacket.senderColor}");
+                Debug.LogError($"Received ChatPacket with senderColor: {chatPacket.senderColor}");
                 AppendMessage($"<color={chatPacket.senderColor}>{chatPacket.senderUsername}</color>: <color=white>{chatPacket.message}</color>");
             }
 

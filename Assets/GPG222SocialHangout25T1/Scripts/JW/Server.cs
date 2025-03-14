@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Dana.Shared.Packets;
+using JW.Syncing;
 using UnityEngine;
 
 namespace Dana.Shared.Server
@@ -21,15 +22,29 @@ namespace Dana.Shared.Server
             // Spinning up the server
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             serverSocket.Bind(new IPEndPoint(IPAddress.Parse(ipAddress), port));
-            serverSocket.Blocking = false;
             serverSocket.Listen(1000);
-            Debug.Log("Waiting For Connection...");
-
+            Debug.LogError("Waiting For Connection...");
+            serverSocket.Blocking = false;
         }
 
         void Update()
         {
-            AcceptClients();
+            //AcceptClients();
+            // Attempt to catch a client
+            try
+            {
+                Socket clientSocket = serverSocket.Accept();
+                clientSocket.Blocking = false;
+                clients.Add(clientSocket);
+                Debug.LogError("Client connected!");
+            }
+            catch (SocketException e)
+            {
+                if (e.SocketErrorCode != SocketError.WouldBlock)
+                {
+                    Debug.LogError(e.ToString());
+                }
+            }
             ProcessClientMessages();
         }
 
@@ -61,7 +76,7 @@ namespace Dana.Shared.Server
 
                 if (!IsSocketConnected(client))
                 {
-                    Debug.Log($"Client has disconnected");
+                    Debug.LogError($"Client has disconnected");
                     client.Close();
                     clients.RemoveAt(i);
                     continue;
@@ -96,19 +111,19 @@ namespace Dana.Shared.Server
             switch (packet)
             {
                 case JoinPacket:
-                    Debug.Log("Received JoinPacket");
+                    Debug.LogWarning("Received JoinPacket");
                     BroadcastToAllClients(packet);
                     break;
 
                 case ChatPacket chatPacket:
-                    Debug.Log($"Received ChatPacket from '{chatPacket.senderUsername}', color: {chatPacket.senderColor}, message: '{chatPacket.message}'");
+                    Debug.LogWarning($"Received ChatPacket from '{chatPacket.senderUsername}', color: {chatPacket.senderColor}, message: '{chatPacket.message}'");
                     BroadcastToAllClients(chatPacket);
                     break;
 
                 case DuckSelectPacket characterSelect:
                     bool isTaken = characterOwnership.ContainsKey(characterSelect.characterID);
                     DuckOwnershipPacket responsePacket = new DuckOwnershipPacket(characterSelect.characterID, isTaken);
-                    client.Send(responsePacket.SerializeChatPackets());
+                    client.Send(responsePacket.SerializePacket());
 
                     if (!isTaken)
                     {
@@ -116,20 +131,25 @@ namespace Dana.Shared.Server
                         BroadcastToAllClients(characterSelect);
                     }
                     break;
+                
+                case SyncPacket syncPacket:
+                    Debug.LogError("Received SyncPacket");
+                    BroadcastToAllClients(syncPacket);
+                    break;
             }
         }
 
 
         private void BroadcastToAllClients(IPacket packet)
         {
-            byte[] buffer = packet.SerializeChatPackets();
+            byte[] buffer = packet.SerializePacket();
 
             if (packet is ChatPacket chatPacket)
             {
-                Debug.Log($"[Server] Broadcasting ChatPacket from '{chatPacket.senderUsername}', color: {chatPacket.senderColor}");
+                Debug.LogWarning($"[Server] Broadcasting ChatPacket from '{chatPacket.senderUsername}', color: {chatPacket.senderColor}");
             }
 
-            Debug.Log($"📡 Broadcasting Packet: {packet.PacketType} to {clients.Count} clients");
+            Debug.LogWarning($"📡 Broadcasting Packet: {packet.PacketType} to {clients.Count} clients");
 
             foreach (Socket client in clients)
             {

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using Dana.ChatSystem;
+using JW.Syncing;
 
 namespace Dana.Shared.Packets
 {
@@ -12,7 +13,9 @@ namespace Dana.Shared.Packets
         Join = 1,
         Chat = 2,
         CharacterSelect = 3,
-        CharacterStatus = 4
+        CharacterStatus = 4,
+        FloatX = 5,
+        SyncPacket = 6,
     }
     #endregion
 
@@ -20,7 +23,7 @@ namespace Dana.Shared.Packets
     public interface IPacket
     {
         PacketTypes PacketType { get; }
-        byte[] SerializeChatPackets();
+        byte[] SerializePacket();
     }
     #endregion
 
@@ -34,7 +37,7 @@ namespace Dana.Shared.Packets
             PacketType = packetType;
         }
 
-        public byte[] SerializeChatPackets()
+        public byte[] SerializePacket()
         {
             using MemoryStream stream = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.Unicode);
@@ -64,10 +67,10 @@ namespace Dana.Shared.Packets
                 PacketTypes.Chat => ChatPacket.Deserialize(buffer),
                 PacketTypes.CharacterSelect => DuckSelectPacket.Deserialize(buffer),
                 PacketTypes.CharacterStatus => DuckOwnershipPacket.Deserialize(buffer),
+                PacketTypes.FloatX => FloatX.Deserialize(buffer),
+                PacketTypes.SyncPacket => SyncPacket.Deserialize(buffer),
                 _ => throw new Exception($"Unknown packet type: {packetType}")
             };
-
-
         }
     }
     #endregion

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using Dana.Shared.Packets;
+using JW.Syncing;
 
 namespace Dana.JW.Client
 {
@@ -12,6 +13,8 @@ namespace Dana.JW.Client
 
         public event Action<IPacket> OnPacketReceived;
         public event Action<string> OnError;
+        
+        public SyncManager SyncManager { get; private set; }
         #endregion
 
         #region Public Functions
@@ -33,7 +36,7 @@ namespace Dana.JW.Client
         {
             if (Connected)
             {
-                byte[] bytes = packet.SerializeChatPackets();
+                byte[] bytes = packet.SerializePacket();
                 Socket.Send(bytes);
             }
         }

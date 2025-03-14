@@ -5,6 +5,7 @@ using Dana.ChatSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Net;
 
 namespace JW.Dana.BaseNetwork
 {
@@ -34,6 +35,8 @@ namespace JW.Dana.BaseNetwork
             {
                 Destroy(gameObject);
             }
+            
+            
         }
 
         private void Start()
@@ -107,6 +110,10 @@ namespace JW.Dana.BaseNetwork
 
                 case ChatPacket chatPacket:
                     Debug.Log($"Chat message: {chatPacket.message}");
+                    break;
+                
+                case FloatX:
+                    Debug.Log("FloatX recieved");   
                     break;
             }
         }
