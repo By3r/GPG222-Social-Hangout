@@ -23,7 +23,7 @@ namespace Dana.DuckCam
                 return;
             }
 
-            int selectedCharacter = NetworkManager.instance.playerData.CharacterID;
+            int selectedCharacter = NetworkManager.instance.playerData.DuckID;
 
             foreach (Camera cam in characterCameras)
             {

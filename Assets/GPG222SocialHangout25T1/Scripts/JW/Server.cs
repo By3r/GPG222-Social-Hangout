@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Dana.Shared.Packets;
-using UnityEngine;\
+using UnityEngine;
 
 namespace Dana.Shared.Server
 {
@@ -101,7 +101,7 @@ namespace Dana.Shared.Server
                     break;
 
                 case ChatPacket chatPacket:
-                    Debug.Log($"Received ChatPacket from {chatPacket.senderUsername}: {chatPacket.message}");
+                    Debug.Log($"Received ChatPacket from '{chatPacket.senderUsername}', color: {chatPacket.senderColor}, message: '{chatPacket.message}'");
                     BroadcastToAllClients(chatPacket);
                     break;
 
@@ -123,6 +123,12 @@ namespace Dana.Shared.Server
         private void BroadcastToAllClients(IPacket packet)
         {
             byte[] buffer = packet.SerializeChatPackets();
+
+            if (packet is ChatPacket chatPacket)
+            {
+                Debug.Log($"[Server] Broadcasting ChatPacket from '{chatPacket.senderUsername}', color: {chatPacket.senderColor}");
+            }
+
             Debug.Log($"📡 Broadcasting Packet: {packet.PacketType} to {clients.Count} clients");
 
             foreach (Socket client in clients)
@@ -146,6 +152,5 @@ namespace Dana.Shared.Server
                 return false;
             }
         }
-
     }
 }

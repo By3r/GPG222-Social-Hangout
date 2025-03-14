@@ -69,13 +69,14 @@ namespace JW.Dana.BaseNetwork
                     3 => "#008000",   // Vert
                     _ => "#FFFFFF"    // Whites === _ as in default
                 };
+                Debug.Log($"DuckID received: {characterID}, Selected Color: {selectedColor}");
 
                 playerData = new PlayerData(username, randomTag, selectedColor, characterID);
             }
 
-            Debug.Log($"PlayerData Initialised as {playerData.Name}, {playerData.Tag}, {playerData.Color}, {playerData.CharacterID}");
+            Debug.Log($"PlayerData Initialised as {playerData.Name}, {playerData.Tag}, {playerData.Color}, {playerData.DuckID}");
 
-            client.SendPacket(new JoinPacket(playerData.Name, playerData.CharacterID));
+            client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID));
         }
 
         public void RequestCharacterSelection(string username, int characterID)
@@ -95,7 +96,7 @@ namespace JW.Dana.BaseNetwork
 
                     if (!statusPacket.isTaken)
                     {
-                        client.SendPacket(new JoinPacket(playerData.Name, playerData.CharacterID));
+                        client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID));
                     }
                     break;
 

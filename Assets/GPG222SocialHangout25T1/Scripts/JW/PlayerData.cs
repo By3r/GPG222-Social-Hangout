@@ -4,15 +4,15 @@ namespace Dana.Shared.PlayerInformation
     {
         public string Name { get; private set; }
         public int Tag { get; private set; }
-        public string Color { get; private set; }  // ----------------- D 
-        public int CharacterID { get; private set; }  // --------------------------- D
+        public string Color { get; private set; }
+        public int DuckID { get; private set; }
 
         public PlayerData(string name, int tag, string color, int duckID)
         {
             Name = name;
             Tag = tag;
-            Color = color; // ------------------------------ D
-            CharacterID = duckID; // ------------------ D
+            Color = color;
+            DuckID = duckID;
         }
     }
 }
