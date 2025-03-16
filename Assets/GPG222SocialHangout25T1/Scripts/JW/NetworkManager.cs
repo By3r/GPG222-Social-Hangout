@@ -200,7 +200,7 @@ namespace JW.Dana.BaseNetwork
                 return;
             }
 
-            GameObject duckInstance = Instantiate(duckPrefabs[duckID], transform.position, Quaternion.identity); // --------------- Spawns them at whatever the prefab's pos was
+            GameObject duckInstance = Instantiate(duckPrefabs[duckID], transform.position, Quaternion.Euler(-90, 0, 0)); // --------------- Spawns them at whatever the prefab's pos was
             duckInstance.name = joinPacket.username;
             Debug.Log($"Spawned remote duck for {joinPacket.username} with duckID {duckID}");
         }
