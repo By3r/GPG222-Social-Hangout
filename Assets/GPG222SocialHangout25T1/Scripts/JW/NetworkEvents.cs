@@ -8,6 +8,9 @@ namespace JW.Dana.BaseNetwork
         public delegate void ServerConnect();
         public ServerConnect ServerConnectEvent;
 
+        public delegate void ClientConnected();
+        public ClientConnected OnNewClientConnect;
+
         public event Action<int, bool> OnCharacterAvailabilityReceived;
         protected void InvokeCharacterAvailabilityEvent(int characterID, bool isTaken)
         {

@@ -27,6 +27,7 @@ namespace Dana.Duck.Spawn
 
         private void Start()
         {
+            /*
             if (NetworkManager.instance != null && NetworkManager.instance.playerData != null)
             {
                 networkManager = NetworkManager.instance;
@@ -40,12 +41,15 @@ namespace Dana.Duck.Spawn
             NetworkManager.instance.Client.OnPacketReceived += OnPacketReceived;
 
             SpawnPlayer(networkManager.playerData.Name, networkManager.playerData.DuckID, true);
+            */
         }
 
         private void OnDestroy()
         {
+            /*
             if (NetworkManager.instance != null)
                 NetworkManager.instance.Client.OnPacketReceived -= OnPacketReceived;
+            */
         }
 
         public void RequestClientSync()
@@ -66,6 +70,7 @@ namespace Dana.Duck.Spawn
         /// <param name="packet">The received packet.</param>
         private void OnPacketReceived(IPacket packet)
         {
+            Debug.LogWarning($"Duck Spawner recieved {packet.PacketType} packet");
             if (packet is JoinPacket joinPacket)
             {
                 if (NetworkManager.instance != null)
@@ -94,7 +99,7 @@ namespace Dana.Duck.Spawn
         /// <param name="username">The player's username.</param>
         /// <param name="duckID">The duck selection ID.</param>
         /// <param name="isLocal">Whether this is the local player.</param>
-        private void SpawnPlayer(string username, int duckID, bool isLocal)
+        public void SpawnPlayer(string username, int duckID, bool isLocal)
         {
             if (duckID < 0 || duckID >= duckPrefabs.Length || duckID >= spawnPoints.Length)
             {
@@ -130,8 +135,13 @@ namespace Dana.Duck.Spawn
             }
         }
 
-        private void SpawnDuck(string username, int duckID, bool isLocal)
+        public void SpawnDuck(string username, int duckID, bool isLocal)
         {
+            if (spawnedPlayers.ContainsKey(username))
+            {
+                return;
+            }
+
             GameObject duckInstance = Instantiate(
                 duckPrefabs[duckID],
                 spawnPoints[duckID].position,

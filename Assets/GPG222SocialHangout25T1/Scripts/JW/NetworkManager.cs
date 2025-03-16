@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine.TextCore.Text;
+using Dana.Duck.Spawn;
 
 namespace JW.Dana.BaseNetwork
 {
@@ -36,6 +37,8 @@ namespace JW.Dana.BaseNetwork
         public bool SceneShouldChange = false;
         public int SceneNumber = 0;
 
+        public DuckSpawner duckSpawner;
+
         private void Awake()
         {
             if (instance == null)
@@ -45,6 +48,8 @@ namespace JW.Dana.BaseNetwork
                 
                 ClientUsernames = new List<string>();
                 ClientsDuckIDs = new List<int>();
+
+                duckSpawner.gameObject.SetActive(false);
             }
             else
             {
@@ -74,6 +79,12 @@ namespace JW.Dana.BaseNetwork
                     SceneManager.LoadScene(1);
                     SceneNumber = 1;
                     client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID));
+                    duckSpawner.gameObject.SetActive(true);
+
+                    for (int i = 0; i < ClientsDuckIDs.Count; i++)
+                    {
+                        duckSpawner.SpawnDuck(ClientUsernames[i], ClientsDuckIDs[i], ClientUsernames[i] == playerData.Name);
+                    }
                 }
             }
         }
@@ -119,6 +130,7 @@ namespace JW.Dana.BaseNetwork
         #region Private Functions
         private void HandlePacketReceived(IPacket packet)
         {
+            Debug.LogError($"Client recieved {packet.PacketType}");
             switch (packet)
             {
                 case ClientRequestPacket request:
@@ -154,13 +166,23 @@ namespace JW.Dana.BaseNetwork
                         if (!ClientUsernames.Contains(joinPacket.username))
                         {
                             ClientUsernames.Add(joinPacket.username);
+
                         }
                         if (!ClientsDuckIDs.Contains(joinPacket.duckID))
                         {
                             ClientsDuckIDs.Add(joinPacket.duckID);
                         }
+
+                        if (duckSpawner != null)
+                        {
+                            duckSpawner.SpawnPlayer(joinPacket.username, joinPacket.duckID, false);
+                        }
                     }
-                    
+                    else if (joinPacket.username == playerData.Name)
+                    {
+                        duckSpawner.SpawnPlayer(joinPacket.username, joinPacket.duckID, true);
+                    }
+
                     break;
 
                 case ChatPacket chatPacket:
@@ -174,7 +196,13 @@ namespace JW.Dana.BaseNetwork
                 case ClientListPacket listPacket:
                     ClientsDuckIDs = listPacket.ClientDuckIDs;
                     ClientUsernames = listPacket.ClientUsernames;
-                    IsRequestFulfilled = true;
+                    if (duckSpawner != null && duckSpawner.isActiveAndEnabled)
+                    {
+                        for (int i = 0; i < ClientsDuckIDs.Count; i++)
+                        {
+                            duckSpawner.SpawnDuck(ClientUsernames[i], ClientsDuckIDs[i], ClientUsernames[i] == playerData.Name);
+                        }
+                    }
                     break;
 
                 case ClientCountPacket countPacket:

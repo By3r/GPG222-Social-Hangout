@@ -16,8 +16,8 @@ namespace Dana.Shared.Server
         private Socket serverSocket;
         private List<Socket> clients = new List<Socket>();
         private Dictionary<int, int> characterOwnership = new();
-        private List<int> ducksChosen = new();
-        private List<string> duckNames = new();
+        public List<int> ducksChosen = new();
+        public List<string> duckNames = new();
         #endregion
 
         void Start()
@@ -38,6 +38,8 @@ namespace Dana.Shared.Server
                 Socket clientSocket = serverSocket.Accept();
                 clientSocket.Blocking = false;
                 clients.Add(clientSocket);
+                var listPacket = new ClientListPacket(ducksChosen, duckNames);
+                StartCoroutine(BroadcastToAllClients(listPacket, 1.5f));
                 Debug.LogError("Client connected!");
             }
             catch (SocketException e)
@@ -95,14 +97,14 @@ namespace Dana.Shared.Server
             {
                 case JoinPacket joinPacket:
                     Debug.LogWarning("Received JoinPacket");
-                    ducksChosen.Add(joinPacket.duckID);
-                    duckNames.Add(joinPacket.username);
-                    BroadcastToAllClients(packet);
+                    if (!ducksChosen.Contains(joinPacket.duckID)) ducksChosen.Add(joinPacket.duckID);
+                    if (!duckNames.Contains(joinPacket.username)) duckNames.Add(joinPacket.username);
+                    StartCoroutine(BroadcastToAllClients(packet));
                     break;
 
                 case ChatPacket chatPacket:
                     Debug.LogWarning($"Received ChatPacket from '{chatPacket.senderUsername}', color: {chatPacket.senderColor}, message: '{chatPacket.message}'");
-                    BroadcastToAllClients(chatPacket);
+                    StartCoroutine(BroadcastToAllClients(chatPacket));
                     break;
 
                 case DuckSelectPacket characterSelect:
@@ -113,17 +115,17 @@ namespace Dana.Shared.Server
                     if (!isTaken)
                     {
                         characterOwnership[characterSelect.characterID] = clients.IndexOf(client);
-                        BroadcastToAllClients(characterSelect);
+                        StartCoroutine(BroadcastToAllClients(characterSelect));
                     }
                     break;
                 
                 case SyncPacket syncPacket:
-                    BroadcastToAllClients(syncPacket);
+                    StartCoroutine(BroadcastToAllClients(syncPacket));
                     break;
 
                 case ClientListPacket clientListPacket:
                     Debug.LogWarning("ClientListPacket Recieved");
-                    BroadcastToAllClients(clientListPacket);
+                    StartCoroutine(BroadcastToAllClients(clientListPacket));
                     break;
 
                 case ClientCountPacket clientCountPacket:
@@ -144,11 +146,11 @@ namespace Dana.Shared.Server
 
             Debug.LogWarning($"📡 Broadcasting Packet: {packet.PacketType} to {clients.Count} clients");
 
+            yield return new WaitForSeconds(delay);
             foreach (Socket client in clients)
             {
                 if (client.Connected)
                 {
-                    yield return new WaitForSeconds(delay);
                     client.Send(buffer);
                 }
             }
