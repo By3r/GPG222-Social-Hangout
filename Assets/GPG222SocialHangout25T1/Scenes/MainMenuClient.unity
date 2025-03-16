@@ -3542,6 +3542,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ipAddress: 127.0.0.1
   port: 5500
+  clientCount: 0
+  IsRequestFulfilled: 0
+  ClientsDuckIDs: 
+  ClientUsernames: []
+  duckPrefabs:
+  - {fileID: 4764395290347673450, guid: bffc3ea0af7ceb949a045c385d08f0e8, type: 3}
+  - {fileID: 8707478781133863424, guid: 960abf523cd8214449c5bbbf534d419d, type: 3}
+  - {fileID: 53555959378363564, guid: fb8d292f9d6ab6e4b90f48ed54501dbb, type: 3}
+  - {fileID: 190387729507163674, guid: 0c851271473e2304d949de5f91cbde5d, type: 3}
+  sceneChangeTimer: 0
+  SceneShouldChange: 0
+  SceneNumber: 0
 --- !u!114 &2116616172
 MonoBehaviour:
   m_ObjectHideFlags: 0

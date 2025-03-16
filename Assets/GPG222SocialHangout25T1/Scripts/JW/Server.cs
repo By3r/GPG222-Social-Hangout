@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Dana.Shared.Packets;
@@ -16,8 +15,7 @@ namespace Dana.Shared.Server
         private Socket serverSocket;
         private List<Socket> clients = new List<Socket>();
         private Dictionary<int, int> characterOwnership = new();
-        private List<int> ducksChosen = new();
-        private List<string> duckNames = new();
+        private List<JoinPacket> connectedPlayers = new List<JoinPacket>();
         #endregion
 
         void Start()
@@ -50,7 +48,7 @@ namespace Dana.Shared.Server
             ProcessClientMessages();
         }
 
-
+      
         private void ProcessClientMessages()
         {
             for (int i = clients.Count - 1; i >= 0; i--)
@@ -95,9 +93,9 @@ namespace Dana.Shared.Server
             {
                 case JoinPacket joinPacket:
                     Debug.LogWarning("Received JoinPacket");
-                    ducksChosen.Add(joinPacket.duckID);
-                    duckNames.Add(joinPacket.username);
-                    BroadcastToAllClients(packet);
+                    connectedPlayers.Add(joinPacket);
+                    BroadcastToAllClients(joinPacket);
+                    SendStoredJoinPackets(client);
                     break;
 
                 case ChatPacket chatPacket:
@@ -116,24 +114,24 @@ namespace Dana.Shared.Server
                         BroadcastToAllClients(characterSelect);
                     }
                     break;
-                
+
                 case SyncPacket syncPacket:
+                    Debug.LogError("Received SyncPacket");
                     BroadcastToAllClients(syncPacket);
-                    break;
-
-                case ClientListPacket clientListPacket:
-                    Debug.LogWarning("ClientListPacket Recieved");
-                    BroadcastToAllClients(clientListPacket);
-                    break;
-
-                case ClientCountPacket clientCountPacket:
-                    SendToClient(client, clientCountPacket);
                     break;
             }
         }
 
+        private void SendStoredJoinPackets(Socket client)
+        {
+            foreach (JoinPacket storedJoin in connectedPlayers)
+            {
+                byte[] joinData = storedJoin.SerializePacket();
+                client.Send(joinData);
+            }
+        }
 
-        private IEnumerator BroadcastToAllClients(IPacket packet, float delay = 0f)
+        private void BroadcastToAllClients(IPacket packet)
         {
             byte[] buffer = packet.SerializePacket();
 
@@ -148,26 +146,9 @@ namespace Dana.Shared.Server
             {
                 if (client.Connected)
                 {
-                    yield return new WaitForSeconds(delay);
                     client.Send(buffer);
                 }
             }
-        }
-
-        IEnumerator SendDelayed(Socket client, IPacket packet, float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            client.Send(packet.SerializePacket());
-        }
-
-        private void SendToClient(Socket client, IPacket packet)
-        {
-            if (!client.Connected)
-            {
-                return;
-            }
-
-            client.Send(packet.SerializePacket());
         }
 
         private bool IsSocketConnected(Socket s)

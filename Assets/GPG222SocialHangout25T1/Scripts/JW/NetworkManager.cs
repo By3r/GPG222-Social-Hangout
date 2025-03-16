@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine.TextCore.Text;
+using JW.Syncing;
 
 namespace JW.Dana.BaseNetwork
 {
@@ -25,7 +26,10 @@ namespace JW.Dana.BaseNetwork
         public bool IsRequestFulfilled = false;
 
         public List<int> ClientsDuckIDs = new List<int>();
-        public List<string> ClientUsernames =  new List<string>();
+        public List<string> ClientUsernames = new List<string>();
+        [Header("Duck Spawning")]
+        [Tooltip("Assign duck prefabs into this array, make sure they match the order of ducks you placed in game scene..")]
+        [SerializeField] private GameObject[] duckPrefabs;
 
         // Network Manager Singleton
         public PlayerData playerData { get; private set; }
@@ -42,7 +46,7 @@ namespace JW.Dana.BaseNetwork
             {
                 instance = this;
                 DontDestroyOnLoad(gameObject);
-                
+
                 ClientUsernames = new List<string>();
                 ClientsDuckIDs = new List<int>();
             }
@@ -50,9 +54,8 @@ namespace JW.Dana.BaseNetwork
             {
                 Destroy(gameObject);
             }
-
-
         }
+
 
         private void Start()
         {
@@ -106,7 +109,7 @@ namespace JW.Dana.BaseNetwork
                 SceneShouldChange = true;
             }
 
-            
+
         }
 
         public void RequestCharacterSelection(string username, int characterID)
@@ -146,7 +149,7 @@ namespace JW.Dana.BaseNetwork
 
                 case JoinPacket:
                     Debug.Log("Loading game...");
-                    
+
                     JoinPacket joinPacket = (JoinPacket)packet;
                     Debug.Log($"DuckID received: {playerData.DuckID}");
                     if (joinPacket.username != playerData.Name)
@@ -154,13 +157,14 @@ namespace JW.Dana.BaseNetwork
                         if (!ClientUsernames.Contains(joinPacket.username))
                         {
                             ClientUsernames.Add(joinPacket.username);
+                            SpawnRemoteDuck(joinPacket);
                         }
                         if (!ClientsDuckIDs.Contains(joinPacket.duckID))
                         {
                             ClientsDuckIDs.Add(joinPacket.duckID);
                         }
                     }
-                    
+
                     break;
 
                 case ChatPacket chatPacket:
@@ -184,12 +188,30 @@ namespace JW.Dana.BaseNetwork
             }
         }
 
+        /// <summary>
+        /// Spawns a duck for a remote player based on the received JoinPacket. (The list's indexing matters)
+        /// </summary>
+        private void SpawnRemoteDuck(JoinPacket joinPacket)
+        {
+            int duckID = joinPacket.duckID;
+            if (duckID < 0 || duckID >= duckPrefabs.Length)
+            {
+                Debug.LogError($"Invalid duckID received: {duckID}");
+                return;
+            }
+
+            GameObject duckInstance = Instantiate(duckPrefabs[duckID], transform.position, Quaternion.identity); // --------------- Spawns them at whatever the prefab's pos was
+            duckInstance.name = joinPacket.username;
+            Debug.Log($"Spawned remote duck for {joinPacket.username} with duckID {duckID}");
+        }
+        #endregion
+
         public IEnumerator LoadGameSceneAfterDelay()
         {
             Debug.Log("Loading next scene");
             yield return new WaitForSeconds(1f);
             SceneManager.LoadScene(1);
         }
-        #endregion
+
     }
 }
