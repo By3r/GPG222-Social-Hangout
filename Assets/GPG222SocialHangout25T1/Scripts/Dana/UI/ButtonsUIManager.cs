@@ -48,6 +48,8 @@ namespace Dana.UI
             loadingPanel.SetActive(true);
 
             NetworkManager.instance.ConnectToServer(username, selectedCharacter);
+
+            
         }
 
         public void SelectCharacter(int characterID)

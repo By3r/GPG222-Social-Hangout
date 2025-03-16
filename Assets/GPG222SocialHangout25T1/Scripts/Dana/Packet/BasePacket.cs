@@ -16,6 +16,9 @@ namespace Dana.Shared.Packets
         CharacterStatus = 4,
         FloatX = 5,
         SyncPacket = 6,
+        ClientListPackets = 7,
+        ClientRequestPacket = 8,
+        CLientCountPacket = 9
     }
     #endregion
 
@@ -69,6 +72,8 @@ namespace Dana.Shared.Packets
                 PacketTypes.CharacterStatus => DuckOwnershipPacket.Deserialize(buffer),
                 PacketTypes.FloatX => FloatX.Deserialize(buffer),
                 PacketTypes.SyncPacket => SyncPacket.Deserialize(buffer),
+                PacketTypes.ClientListPackets => ClientListPacket.Deserialize(buffer),
+                PacketTypes.CLientCountPacket => ClientCountPacket.Deserialize(buffer),
                 _ => throw new Exception($"Unknown packet type: {packetType}")
             };
         }

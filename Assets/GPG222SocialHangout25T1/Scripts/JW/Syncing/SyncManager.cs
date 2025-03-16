@@ -13,7 +13,7 @@ namespace JW.Syncing
         [SerializeField] private int syncFrameFrequency = 10;
         private int syncFrameCounter = 0;
         [SerializeField] private NetworkManager networkManager;
-        private List<ObjectSyncer> syncObjectIDs = new();
+        [SerializeField] private List<ObjectSyncer> syncObjectIDs = new();
         
         public static SyncManager Instance;
 
@@ -31,16 +31,21 @@ namespace JW.Syncing
             
             networkManager = NetworkManager.instance; // Get the network manager so we can send packets
 
-            NetworkManager.instance.Client.OnPacketReceived += OnPacketReceived; // Subsribe to the delegate so we can recieve sync packets
+            networkManager.Client.OnPacketReceived += OnPacketReceived; // Subsribe to the delegate so we can recieve sync packets
         }
 
         private void OnDestroy()
         {
-            NetworkManager.instance.Client.OnPacketReceived -= OnPacketReceived;
+            networkManager.Client.OnPacketReceived -= OnPacketReceived;
         }
 
         private void FixedUpdate()
         {
+            if (networkManager.ClientsDuckIDs.Count == 1 || syncObjectIDs.Count == 0) // only continue if there are more than one duck
+            {
+                return;
+            }
+
             syncFrameCounter++;
             if (syncFrameCounter < syncFrameFrequency) return; // Will enter when it is time to send the packet with syncing data
             syncFrameCounter = 0;
@@ -86,6 +91,11 @@ namespace JW.Syncing
 
         public void OnPacketReceived(IPacket packet)
         {
+            if (syncObjectIDs.Count < 2)
+            {
+                return;
+            }
+
             // make sure it's a sync packet
             if (packet.PacketType != PacketTypes.SyncPacket)
             {

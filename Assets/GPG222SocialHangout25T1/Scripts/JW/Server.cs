@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Dana.Shared.Packets;
@@ -15,6 +16,8 @@ namespace Dana.Shared.Server
         private Socket serverSocket;
         private List<Socket> clients = new List<Socket>();
         private Dictionary<int, int> characterOwnership = new();
+        private List<int> ducksChosen = new();
+        private List<string> duckNames = new();
         #endregion
 
         void Start()
@@ -29,7 +32,6 @@ namespace Dana.Shared.Server
 
         void Update()
         {
-            //AcceptClients();
             // Attempt to catch a client
             try
             {
@@ -46,25 +48,6 @@ namespace Dana.Shared.Server
                 }
             }
             ProcessClientMessages();
-        }
-
-        private void AcceptClients()
-        {
-            // Attempt to catch a client
-            try
-            {
-                Socket clientSocket = serverSocket.Accept();
-                clientSocket.Blocking = false;
-                clients.Add(clientSocket);
-                Debug.LogError("Client connected!");
-            }
-            catch (SocketException e)
-            {
-                if (e.SocketErrorCode != SocketError.WouldBlock)
-                {
-                    Debug.LogError(e.ToString());
-                }
-            }
         }
 
 
@@ -110,8 +93,10 @@ namespace Dana.Shared.Server
 
             switch (packet)
             {
-                case JoinPacket:
+                case JoinPacket joinPacket:
                     Debug.LogWarning("Received JoinPacket");
+                    ducksChosen.Add(joinPacket.duckID);
+                    duckNames.Add(joinPacket.username);
                     BroadcastToAllClients(packet);
                     break;
 
@@ -133,14 +118,22 @@ namespace Dana.Shared.Server
                     break;
                 
                 case SyncPacket syncPacket:
-                    Debug.LogError("Received SyncPacket");
                     BroadcastToAllClients(syncPacket);
+                    break;
+
+                case ClientListPacket clientListPacket:
+                    Debug.LogWarning("ClientListPacket Recieved");
+                    BroadcastToAllClients(clientListPacket);
+                    break;
+
+                case ClientCountPacket clientCountPacket:
+                    SendToClient(client, clientCountPacket);
                     break;
             }
         }
 
 
-        private void BroadcastToAllClients(IPacket packet)
+        private IEnumerator BroadcastToAllClients(IPacket packet, float delay = 0f)
         {
             byte[] buffer = packet.SerializePacket();
 
@@ -155,11 +148,27 @@ namespace Dana.Shared.Server
             {
                 if (client.Connected)
                 {
+                    yield return new WaitForSeconds(delay);
                     client.Send(buffer);
                 }
             }
         }
 
+        IEnumerator SendDelayed(Socket client, IPacket packet, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            client.Send(packet.SerializePacket());
+        }
+
+        private void SendToClient(Socket client, IPacket packet)
+        {
+            if (!client.Connected)
+            {
+                return;
+            }
+
+            client.Send(packet.SerializePacket());
+        }
 
         private bool IsSocketConnected(Socket s)
         {

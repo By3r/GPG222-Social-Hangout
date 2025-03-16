@@ -5,7 +5,9 @@ using JW.Shared.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net;
+using UnityEngine.TextCore.Text;
 
 namespace JW.Dana.BaseNetwork
 {
@@ -19,10 +21,20 @@ namespace JW.Dana.BaseNetwork
         [Tooltip("Assign this space with the client script.")]
         private Client client;
         public Client Client => client;
+        public int clientCount = 0;
+        public bool IsRequestFulfilled = false;
+
+        public List<int> ClientsDuckIDs = new List<int>();
+        public List<string> ClientUsernames =  new List<string>();
 
         // Network Manager Singleton
         public PlayerData playerData { get; private set; }
         public static NetworkManager instance { get; private set; }
+
+        // Scene switching
+        public float sceneChangeTimer = 0f;
+        public bool SceneShouldChange = false;
+        public int SceneNumber = 0;
 
         private void Awake()
         {
@@ -30,6 +42,9 @@ namespace JW.Dana.BaseNetwork
             {
                 instance = this;
                 DontDestroyOnLoad(gameObject);
+                
+                ClientUsernames = new List<string>();
+                ClientsDuckIDs = new List<int>();
             }
             else
             {
@@ -50,6 +65,17 @@ namespace JW.Dana.BaseNetwork
         private void Update()
         {
             client?.ProcessIncomingData();
+
+            if (SceneShouldChange && SceneNumber == 0)
+            {
+                sceneChangeTimer += Time.deltaTime;
+                if (sceneChangeTimer > 1f)
+                {
+                    SceneManager.LoadScene(1);
+                    SceneNumber = 1;
+                    client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID));
+                }
+            }
         }
 
         #region Public Functions
@@ -73,13 +99,14 @@ namespace JW.Dana.BaseNetwork
                     _ => "#FFFFFF"    // Whites === _ as in default
                 };
                 Debug.Log($"DuckID received: {characterID}, Selected Color: {selectedColor}");
-
                 playerData = new PlayerData(username, randomTag, selectedColor, characterID);
+                Debug.Log($"PlayerData Initialised as {playerData.Name}, {playerData.Tag}, {playerData.Color}, {playerData.DuckID}");
+                ClientsDuckIDs.Add(characterID);
+                ClientUsernames.Add(username);
+                SceneShouldChange = true;
             }
 
-            Debug.Log($"PlayerData Initialised as {playerData.Name}, {playerData.Tag}, {playerData.Color}, {playerData.DuckID}");
-
-            client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID));
+            
         }
 
         public void RequestCharacterSelection(string username, int characterID)
@@ -94,18 +121,46 @@ namespace JW.Dana.BaseNetwork
         {
             switch (packet)
             {
+                case ClientRequestPacket request:
+                    if (request.packetID == (int)PacketTypes.ClientListPackets)
+                    {
+                        client.SendPacket(new ClientListPacket(ClientsDuckIDs, ClientUsernames));
+                    }
+                    break;
+
                 case DuckOwnershipPacket statusPacket:
                     InvokeCharacterAvailabilityEvent(statusPacket.duckID, statusPacket.isTaken);
 
                     if (!statusPacket.isTaken)
                     {
-                        client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID));
+                        if (ClientsDuckIDs.Count > 1)
+                        {
+                            client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID, ClientsDuckIDs, ClientUsernames));
+                        }
+                        else
+                        {
+                            client.SendPacket(new JoinPacket(playerData.Name, playerData.DuckID));
+                        }
                     }
                     break;
 
                 case JoinPacket:
                     Debug.Log("Loading game...");
-                    StartCoroutine(LoadGameSceneAfterDelay());
+                    
+                    JoinPacket joinPacket = (JoinPacket)packet;
+                    Debug.Log($"DuckID received: {playerData.DuckID}");
+                    if (joinPacket.username != playerData.Name)
+                    {
+                        if (!ClientUsernames.Contains(joinPacket.username))
+                        {
+                            ClientUsernames.Add(joinPacket.username);
+                        }
+                        if (!ClientsDuckIDs.Contains(joinPacket.duckID))
+                        {
+                            ClientsDuckIDs.Add(joinPacket.duckID);
+                        }
+                    }
+                    
                     break;
 
                 case ChatPacket chatPacket:
@@ -115,12 +170,24 @@ namespace JW.Dana.BaseNetwork
                 case FloatX:
                     Debug.Log("FloatX recieved");
                     break;
+
+                case ClientListPacket listPacket:
+                    ClientsDuckIDs = listPacket.ClientDuckIDs;
+                    ClientUsernames = listPacket.ClientUsernames;
+                    IsRequestFulfilled = true;
+                    break;
+
+                case ClientCountPacket countPacket:
+                    clientCount = countPacket.ClientCount;
+                    IsRequestFulfilled = true;
+                    break;
             }
         }
 
-        private IEnumerator LoadGameSceneAfterDelay()
+        public IEnumerator LoadGameSceneAfterDelay()
         {
-            yield return new WaitForSeconds(0.5f);
+            Debug.Log("Loading next scene");
+            yield return new WaitForSeconds(1f);
             SceneManager.LoadScene(1);
         }
         #endregion

@@ -21,29 +21,41 @@ namespace Dana.Duck.Spawn
 
         [Tooltip("Tracks other players that are spawned into the scene!")]
         private Dictionary<string, GameObject> spawnedPlayers = new Dictionary<string, GameObject>();
+        
+        public NetworkManager networkManager;
         #endregion
 
         private void Start()
         {
-            NetworkManager.instance.Client.OnPacketReceived += OnPacketReceived;
             if (NetworkManager.instance != null && NetworkManager.instance.playerData != null)
             {
-                SpawnPlayer(
-                    NetworkManager.instance.playerData.Name,
-                    NetworkManager.instance.playerData.DuckID,
-                    isLocal: true
-                );
+                networkManager = NetworkManager.instance;
             }
             else
             {
-                Debug.LogError("Player data isntt available, can't spawn duck.");
+                Debug.LogError("Player data isn't available, can't spawn duck.");
+                return;
             }
+
+            NetworkManager.instance.Client.OnPacketReceived += OnPacketReceived;
+
+            SpawnPlayer(networkManager.playerData.Name, networkManager.playerData.DuckID, true);
         }
 
         private void OnDestroy()
         {
             if (NetworkManager.instance != null)
                 NetworkManager.instance.Client.OnPacketReceived -= OnPacketReceived;
+        }
+
+        public void RequestClientSync()
+        {
+            networkManager.Client.SendPacket(new ClientRequestPacket(PacketTypes.ClientListPackets));
+            while (networkManager.IsRequestFulfilled)
+            {
+                Debug.Log("Waiting for client list request");
+            }
+            networkManager.IsRequestFulfilled = false;
         }
 
         #region Private Functions
@@ -56,15 +68,22 @@ namespace Dana.Duck.Spawn
         {
             if (packet is JoinPacket joinPacket)
             {
-                if (NetworkManager.instance.playerData != null &&
-                    joinPacket.username == NetworkManager.instance.playerData.Name)
+                if (NetworkManager.instance != null)
                 {
+                    Debug.Log("Duck Spawner has no network manager");
                     return;
                 }
-
-                if (!spawnedPlayers.ContainsKey(joinPacket.username))
+                
+                SpawnPlayer(joinPacket.username, joinPacket.duckID, isLocal: NetworkManager.instance.playerData.Name == joinPacket.username);
+            }
+            else if (packet is ClientListPacket clientListPacket)
+            {
+                foreach (var item in clientListPacket.ClientUsernames)
                 {
-                    SpawnPlayer(joinPacket.username, joinPacket.duckID, isLocal: false);
+                    if (!spawnedPlayers.ContainsKey(item))
+                    {
+                        SpawnDuck(item, networkManager.ClientsDuckIDs[networkManager.ClientUsernames.IndexOf(item)], false);
+                    }
                 }
             }
         }
@@ -83,6 +102,36 @@ namespace Dana.Duck.Spawn
                 return;
             }
 
+            string _name = username;
+            int _duckID = duckID;
+            bool _isLocal = isLocal;
+            if (!spawnedPlayers.ContainsKey(_name))
+            {
+                SpawnDuck(_name, _duckID, _isLocal); // This spawns your local duck
+            }
+            
+            if (NetworkManager.instance.ClientsDuckIDs == null) // Only continue spawning other ducks if other clients have connected
+            {
+                return;
+            }
+            else if (NetworkManager.instance.ClientsDuckIDs.Count == 1)
+            {
+                return;
+            }
+            
+            for (int i = 1; i < NetworkManager.instance.ClientsDuckIDs.Count; i++)
+            {
+                _name = NetworkManager.instance.ClientUsernames[i];
+                _duckID = NetworkManager.instance.ClientsDuckIDs[i];
+                if (!spawnedPlayers.ContainsKey(_name))
+                {
+                    SpawnDuck(_name, _duckID, false);
+                }
+            }
+        }
+
+        private void SpawnDuck(string username, int duckID, bool isLocal)
+        {
             GameObject duckInstance = Instantiate(
                 duckPrefabs[duckID],
                 spawnPoints[duckID].position,
@@ -94,12 +143,9 @@ namespace Dana.Duck.Spawn
             if (syncer != null)
             {
                 // Jan you can configure object syncer here
+                syncer.OwnerID = duckID;
             }
-            if (!isLocal)
-            {
-                spawnedPlayers.Add(username, duckInstance);
-            }
-
+            spawnedPlayers.Add(username, duckInstance);
             Debug.Log($"Spawned {(isLocal ? "local" : "remote")} duck for {username} with duck ID {duckID}");
         }
         #endregion
