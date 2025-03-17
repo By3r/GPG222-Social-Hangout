@@ -1,0 +1,51 @@
+Game Flow:
+1. Server starts up
+2. Player connects to server
+3. Player enters a username and chooses a duck
+4. Player joins the lobby
+{
+	Server creates the PlayerData for the player that just joined the lobby
+	Server adds this PlayerData to a list of players in the lobby
+}
+5. Lobby creates the pllayer's chosen duck
+6. New player connects to server
+7. New player enters username and chosen duck
+8. New player joins the lobby 
+{
+	Server adds the new player's PlayerData to the list of players in the lobby
+	Server sends the list of PlayerDatas to all players in the lobby
+	Each player's lobby spawns the new player's duck
+}
+
+PlayerData 
+{
+	public int DuckID // This will be the owner ID for synced objects, the player's color
+	public string Username
+}
+
+Object Info:
+int duckID // who owns this object 
+int objectID // a way to identify objects per player 
+needs to sync position
+needs to sync rotation 
+
+Data To Sync From Server To Client:
+List<PlayerData>
+Wave Offset for duck floating
+Duck positions ? // If the waves stay a pure sin wave (no randomness) we technically don't need this as you set the wave offset the same on all clients and the ducks will be in close enough to the same (it's deterministic, basicaly)
+
+Packets Needed:
+LobbyPlayerListPacket:
+	List<PlayerData>
+TransformPacket:
+	int duckID
+	int objectID
+	float3 position
+	float3 rotation
+	
+Object Syncing And Spawning:
+Dictionary<int, SyncObject> = Dictionary<DuckID, GameObject to sync> // Probably server side that we can send to clients when a new object is spawned
+Spawning(int duckID, objectToSpawn):
+	Instantiate the object
+	Set the object's duckID = provided duckID 
+	Add the object to the dictionary
