@@ -528,19 +528,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 659592625}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 724015130}
-        m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
-        m_MethodName: OnConnectButtonClicked
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &659592625
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -696,18 +684,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 724015125}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c5f09e162f9bd654d80b416058f8792f, type: 3}
+  m_Script: {fileID: 11500000, guid: b95b15a411117754dac0a82787726b6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  usernameInput: {fileID: 2075563521}
-  feedbackMessages: {fileID: 1015467102}
-  creditsPanel: {fileID: 740848679}
-  loadingPanel: {fileID: 830612826}
-  characterButtons:
+  inputField: {fileID: 2075563521}
+  _duckButtons:
   - {fileID: 2114593800}
   - {fileID: 1557098149}
   - {fileID: 1223745648}
   - {fileID: 2007912366}
+  _connectButton: {fileID: 659592624}
 --- !u!1 &729717738
 GameObject:
   m_ObjectHideFlags: 0
@@ -765,7 +751,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GAME TITLE
+  m_text: Duck Outing
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1556,7 +1542,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 724015130}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -2060,7 +2046,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 724015130}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -3018,7 +3004,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 724015130}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -3460,7 +3446,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 724015130}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
         m_MethodName: SelectCharacter
         m_Mode: 3
@@ -3519,8 +3505,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2116616173}
-  - component: {fileID: 2116616172}
-  - component: {fileID: 2116616171}
+  - component: {fileID: 2116616174}
   m_Layer: 0
   m_Name: --- Do Not Destroy ---
   m_TagString: Untagged
@@ -3528,44 +3513,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2116616171
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116616170}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e2b2f7d15a291c4abc465d1b5322137, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ipAddress: 127.0.0.1
-  port: 5500
-  clientCount: 0
-  IsRequestFulfilled: 0
-  ClientsDuckIDs: 
-  ClientUsernames: []
-  duckPrefabs:
-  - {fileID: 4764395290347673450, guid: bffc3ea0af7ceb949a045c385d08f0e8, type: 3}
-  - {fileID: 8707478781133863424, guid: 960abf523cd8214449c5bbbf534d419d, type: 3}
-  - {fileID: 53555959378363564, guid: fb8d292f9d6ab6e4b90f48ed54501dbb, type: 3}
-  - {fileID: 190387729507163674, guid: 0c851271473e2304d949de5f91cbde5d, type: 3}
-  sceneChangeTimer: 0
-  SceneShouldChange: 0
-  SceneNumber: 0
---- !u!114 &2116616172
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116616170}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28cc79c2a831a7e42b350653ce5aff60, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &2116616173
 Transform:
   m_ObjectHideFlags: 0
@@ -3575,12 +3522,26 @@ Transform:
   m_GameObject: {fileID: 2116616170}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.000015258789, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2116616174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2116616170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1525027c75259046b94dfc911b81430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _ipAddress: 127.0.0.1
+  _port: 5500
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
