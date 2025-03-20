@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Networking.Core;
 
 namespace Networking.Packets
@@ -9,13 +10,10 @@ namespace Networking.Packets
     {
         public JoinPacket()
         {
-            Type = BasePacket.PacketType.Join;
-            PlayerData = null;
-        }
-        public JoinPacket(PlayerData playerData)
-        {
             Type = PacketType.Join;
-            PlayerData = playerData;
+        }
+        public JoinPacket(PlayerData playerData) : base(BasePacket.PacketType.Join, playerData)
+        {
         }
 
         public byte[] Serialize()

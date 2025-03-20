@@ -528,7 +528,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 659592625}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 724015130}
+        m_TargetAssemblyTypeName: Networking.UI.UIManager, Assembly-CSharp
+        m_MethodName: OnConnectClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &659592625
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -688,12 +700,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputField: {fileID: 2075563521}
-  _duckButtons:
-  - {fileID: 2114593800}
-  - {fileID: 1557098149}
-  - {fileID: 1223745648}
-  - {fileID: 2007912366}
-  _connectButton: {fileID: 659592624}
 --- !u!1 &729717738
 GameObject:
   m_ObjectHideFlags: 0
@@ -1472,7 +1478,7 @@ GameObject:
   - component: {fileID: 1223745649}
   - component: {fileID: 1223745648}
   m_Layer: 5
-  m_Name: DuckThree
+  m_Name: Duck2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1542,9 +1548,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
-        m_MethodName: SelectCharacter
+      - m_Target: {fileID: 724015130}
+        m_TargetAssemblyTypeName: Networking.UI.UIManager, Assembly-CSharp
+        m_MethodName: OnDuckClicked
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1674,7 +1680,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1283048288}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 724015130}
+        m_TargetAssemblyTypeName: Networking.UI.UIManager, Assembly-CSharp
+        m_MethodName: OnQuitClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1283048288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1976,7 +1994,7 @@ GameObject:
   - component: {fileID: 1557098150}
   - component: {fileID: 1557098149}
   m_Layer: 5
-  m_Name: DuckTwo
+  m_Name: Duck1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2046,9 +2064,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
-        m_MethodName: SelectCharacter
+      - m_Target: {fileID: 724015130}
+        m_TargetAssemblyTypeName: Networking.UI.UIManager, Assembly-CSharp
+        m_MethodName: OnDuckClicked
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2934,7 +2952,7 @@ GameObject:
   - component: {fileID: 2007912367}
   - component: {fileID: 2007912366}
   m_Layer: 5
-  m_Name: Duckfour
+  m_Name: Duck3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3004,9 +3022,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
-        m_MethodName: SelectCharacter
+      - m_Target: {fileID: 724015130}
+        m_TargetAssemblyTypeName: Networking.UI.UIManager, Assembly-CSharp
+        m_MethodName: OnDuckClicked
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3376,7 +3394,7 @@ GameObject:
   - component: {fileID: 2114593801}
   - component: {fileID: 2114593800}
   m_Layer: 5
-  m_Name: DuckOne
+  m_Name: Duck0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3446,9 +3464,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Dana.UI.ButtonsUIManager, Assembly-CSharp
-        m_MethodName: SelectCharacter
+      - m_Target: {fileID: 724015130}
+        m_TargetAssemblyTypeName: Networking.UI.UIManager, Assembly-CSharp
+        m_MethodName: OnDuckClicked
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

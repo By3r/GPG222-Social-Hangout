@@ -1,55 +1,50 @@
-using System.Collections;
-using System.Collections.Generic;
 using Networking.Core;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.UI;
 
 namespace Networking.UI
 {
     public class UIManager : MonoBehaviour
     {
         private Client _client;
-        
+        [Header("Main Menu Screen")]
+        // Username input
         [SerializeField] private TMP_InputField inputField;
-        
-        // Buttons
-        [SerializeField] private Button[] _duckButtons = new Button[4];
-        [SerializeField] private Button _connectButton;
-        
         private int _duckChosen = -1;
+        public delegate int DuckSelected(int duck);
+        public DuckSelected OnDuckSelected;
+
         // Start is called before the first frame update
         void Start()
         {
-            _connectButton.onClick.AddListener(OnConnectClicked);
             _client = Client.Instance;
-
-            for (int i = 0; i < _duckButtons.Length; i++)
-            {
-                _duckButtons[i].onClick.AddListener(OnDuckClicked(i));
-            }
         }
-
-        private void OnConnectClicked()
+        
+        public void OnConnectClicked()
         {
+            // Get the username
             string _username = inputField.text.Trim();
             if (string.IsNullOrEmpty(_username))
             {
                 Debug.LogError("Please enter a username");
+                return;
             }
 
+            // Get the chosen duck
             if (_duckChosen == -1)
             {
                 Debug.LogError("Please choose a duck");
+                return;
             }
             
+            // Making the new player
             PlayerData playerData = new PlayerData(_duckChosen, _username);
             _client.JoinLobby(playerData);
         }
 
-        private UnityAction OnDuckClicked(int duckNumber) // TODO: Check Duck Availability before allowing it to be chosen
+        public void OnDuckClicked(int duckNumber) // TODO: Check Duck Availability before allowing it to be chosen
         {
+            Debug.LogError($"Duck {duckNumber}");
             bool isDuckAvailable = true;
             for (int i = 0; i < _client.PlayersInLobby.Count; i++)
             {
@@ -64,9 +59,13 @@ namespace Networking.UI
             {
                 _duckChosen = duckNumber;
             }
+            Debug.LogError(_duckChosen);
+            
+        }
 
-
-            return null;
+        public void OnQuitClicked()
+        {
+            Application.Quit();
         }
     }
 }

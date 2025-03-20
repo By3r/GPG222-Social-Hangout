@@ -10,5 +10,11 @@ namespace Networking.Core
             DuckID = duckID;
             Username = username;
         }
+
+        public PlayerData()
+        {
+            DuckID = -1;
+            Username = string.Empty;
+        }
     }
 }

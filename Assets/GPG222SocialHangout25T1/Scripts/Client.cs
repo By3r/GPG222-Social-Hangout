@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using Networking.Packets;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Networking.Core
 {
-    public class Client : MonoBehaviour
+    public class Client : NetworkEvents
     {
         [SerializeField] private string _ipAddress = "127.0.0.1";
         [SerializeField] private int _port = 5500;
@@ -33,6 +34,18 @@ namespace Networking.Core
             {
                 Destroy(this);
             }
+
+            if (PlayerData == null)
+            {
+                PlayerData = new PlayerData();
+            }
+            
+            ServerConnectEvent += ServerConnectEvent;
+        }
+
+        private void OnDestroy()
+        {
+            ServerConnectEvent -= ServerConnectEvent;
         }
 
         private void Start()
@@ -59,31 +72,39 @@ namespace Networking.Core
             {
                 try
                 {
-                    // Get all the data from the buffer of data we have recieved
+                    // Get all the data from the buffer of data we have received
                     byte[] buffer = new byte[_clientSocket.Available];
                     _clientSocket.Receive(buffer);
-                    
                     int bufferSize = buffer.Length;
                     int offset = 0;
 
-                    while (bufferSize > 0)
+                    while (bufferSize > 0) // Process all the packets in the buffer until the buffer is empty
                     {
                         // Deserialize the base of the packet to expose its packet type
                         BasePacket basePacket = new BasePacket();
                         basePacket.Deserialize(buffer, ref bufferSize, ref offset);
 
-                        switch (basePacket.Type)
+                        switch (basePacket.Type) 
                         {
                             case BasePacket.PacketType.None:
+                                Debug.LogError("Packet type is None");
                                 break;
                             case BasePacket.PacketType.Join:
-                                JoinPacket joinPacket = new JoinPacket().Deserialize(buffer, ref bufferSize,  ref offset);
+                                JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize,  ref offset);
+                                if (!_playersInLobby.Contains(jp.PlayerData))
+                                {
+                                    _playersInLobby.Add(jp.PlayerData);
+                                }
+                                Debug.LogError($"Added {jp.PlayerData.Username} to {PlayerData.Username}'s lobby list client side");
                                 break;
                             case BasePacket.PacketType.ClientList:
                                 // TODO: Add a client list packet to send a list of PlayerData for all the clients in the lobby or server
                                 break;
                             case BasePacket.PacketType.Message:
-                                // TODO: Add a message packet to send and recieve messages
+                                MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                // TODO: Add a Message packet to send and receive messages
+                                Debug.LogError($"{mp.PlayerData.Username}: {mp.Message}");
+                                ChatMessageReceivedEvent(mp.PlayerData, mp.Message);
                                 break;
                             
                             default:
@@ -102,6 +123,14 @@ namespace Networking.Core
         {
             _playerData = playerData;
             _clientSocket.Send(new JoinPacket(playerData).Serialize());
+            SceneManager.LoadScene(1);
+        }
+
+        public void SendChatMessage(string message)
+        {
+            byte[] buffer = new MessagePacket(PlayerData, message).Serialize();
+            _clientSocket.Send(buffer);
+            ChatMessageSentEvent(PlayerData, message);
         }
 
         // Sends the packet to the server to be distributed as needed
@@ -112,11 +141,13 @@ namespace Networking.Core
                 case BasePacket.PacketType.None:
                     break;
                 case BasePacket.PacketType.Join:
-                    byte[] buffer = new JoinPacket(packet.PlayerData).Serialize();
-                    _clientSocket.Send(buffer);
+                    JoinPacket jp = (JoinPacket)packet;
+                    _clientSocket.Send(jp.Serialize());
                     break;
                 case BasePacket.PacketType.Message:
-                    // TODO: Implement sending a chat message packet
+                    MessagePacket mp = (MessagePacket)packet;
+                    _clientSocket.Send(mp.Serialize());
+                    // TODO: Implement sending a chat Message packet
                     break;
                 default:
                     break;

@@ -10,16 +10,17 @@ namespace Networking.Core
 {
     public class Server : MonoBehaviour
     {
+        // Server Connection info
         [SerializeField] private string _ipAddress = "127.0.0.1";
         [SerializeField] private int _port = 5500;
         private Socket server;
 
+        // Client info
         private List<Socket> _clientsInLobby = new List<Socket>();
         private List<Socket> _clientsInServer = new List<Socket>();
         private List<PlayerData> _playersInLobby = new List<PlayerData>();
-
         public List<PlayerData> PlayersInLobby { get; }
-
+        
         // Start is called before the first frame update
         void Start()
         {
@@ -47,7 +48,7 @@ namespace Networking.Core
                     _clientsInServer.Add(newClient);
                 }
             }
-            catch (SocketException e) // Otherwise print out the error message
+            catch (SocketException e) // Otherwise print out the error Message
             {
                 if (e.SocketErrorCode != SocketError.WouldBlock)
                 {
@@ -69,46 +70,50 @@ namespace Networking.Core
                     byte[] buffer = new byte[client.Available];
                     int bufferSize = buffer.Length;
                     int offset = 0;
+                    bool stopPacketSpliting = false;
                     
                     // Get the packet's type
                     BasePacket basePacket = new BasePacket();
                     basePacket.Deserialize(buffer,ref bufferSize, ref offset);
-
+                    Debug.LogError($"Buffer size: {bufferSize} bytes, offset: {offset}");
+                    
                     while (bufferSize > 0)
                     {
+                        Debug.LogError($"Server buffer size: {bufferSize}");
                         switch (basePacket.Type)
                         {
                             case BasePacket.PacketType.None:
                                 break;
                             case BasePacket.PacketType.Join: // the client has joined the lobby so needs to be sent to other clients
+                                Debug.LogError("Server received Join Packet");
                                 _clientsInLobby.Add(client);
-                                BroadcastToAllPlayersInLobby(basePacket);
+                                JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize,  ref offset);
+                                BroadcastToAllPlayersInLobby(jp.Serialize());
                                 break;
                             case BasePacket.PacketType.ClientList:
+                                Debug.LogError("Server received Client List Packet");
                                 break;
                             case BasePacket.PacketType.Message:
+                                Debug.LogError("Server received Message Packet");
+                                MessagePacket mp = new  MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                BroadcastToAllPlayersInLobby(mp.Serialize());
                                 break;
                             default:
+                                stopPacketSpliting = true;
                                 break;
                         }
+                        
+                        if  (stopPacketSpliting) {break;}
                     }
                 }
             }
         }
 
-        private void BroadcastToAllPlayersInLobby(BasePacket packet)
+        private void BroadcastToAllPlayersInLobby(byte[] buffer)
         {
-            foreach (var client in _playersInLobby)
+            for (int i = 0; i < _clientsInLobby.Count; i++)
             {
-                if (client == packet.PlayerData) // Skip sending packets to yourself when broadcasting
-                {
-                    continue;
-                }
-
-                if (packet.Type == BasePacket.PacketType.Join)
-                {
-                    
-                }
+                _clientsInLobby[i].Send(buffer);
             }
         }
 
