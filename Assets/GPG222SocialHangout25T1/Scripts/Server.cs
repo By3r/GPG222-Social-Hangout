@@ -68,19 +68,25 @@ namespace Networking.Core
                 {
                     // Get the packets in the client's buffer
                     byte[] buffer = new byte[client.Available];
+                    client.Receive(buffer); // Actually get the stuff in the client's buffer
+                    
+                    // Set up buffer tracking for packet splitting
                     int bufferSize = buffer.Length;
                     int offset = 0;
                     bool stopPacketSpliting = false;
                     
                     // Get the packet's type
-                    BasePacket basePacket = new BasePacket();
-                    basePacket.Deserialize(buffer,ref bufferSize, ref offset);
-                    Debug.LogError($"Buffer size: {bufferSize} bytes, offset: {offset}");
+                    BasePacket bp = new BasePacket();
+                    bp.Deserialize(buffer,ref bufferSize, ref offset);
                     
                     while (bufferSize > 0)
                     {
-                        Debug.LogError($"Server buffer size: {bufferSize}");
-                        switch (basePacket.Type)
+                            // bp.Deserialize(buffer, ref bufferSize, ref offset);
+                        Debug.LogError($"Packet Type: {bp.Type}");
+                        Debug.LogError(
+                            $"Buffer Size: {bp.Size} | Packet Size: {bp.Size} | Offset: {offset}");
+
+                        switch (bp.Type)
                         {
                             case BasePacket.PacketType.None:
                                 break;
@@ -88,7 +94,13 @@ namespace Networking.Core
                                 Debug.LogError("Server received Join Packet");
                                 _clientsInLobby.Add(client);
                                 JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize,  ref offset);
+                                PlayerData p2 = new PlayerData(jp.PlayerData.DuckID, jp.PlayerData.Username);
+                                if (!_playersInLobby.Contains(p2))
+                                {
+                                    _playersInLobby.Add(p2);
+                                }
                                 BroadcastToAllPlayersInLobby(jp.Serialize());
+                                stopPacketSpliting = false;
                                 break;
                             case BasePacket.PacketType.ClientList:
                                 Debug.LogError("Server received Client List Packet");
@@ -97,6 +109,7 @@ namespace Networking.Core
                                 Debug.LogError("Server received Message Packet");
                                 MessagePacket mp = new  MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(mp.Serialize());
+                                stopPacketSpliting = false;
                                 break;
                             default:
                                 stopPacketSpliting = true;

@@ -25,8 +25,8 @@ namespace Networking.Packets
         public new JoinPacket Deserialize(byte[] buffer, ref int bufferSize, ref int offset)
         {
             base.Deserialize(buffer, ref bufferSize, ref offset);
-            
-            // Update the buffer size and offset from the calculated size
+            this.PlayerData = base.PlayerData;
+
             bufferSize -= Size;
             offset += Size;
             
