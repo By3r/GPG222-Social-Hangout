@@ -1,3 +1,4 @@
+using Networking.Packets;
 using UnityEngine;
 
 namespace Networking.Core
@@ -9,6 +10,9 @@ namespace Networking.Core
         
         public delegate void ClientJoinedLobby();
         public ClientJoinedLobby LobbyJoinEvent;
+        
+        public delegate void PacketReceived(BasePacket packet);
+        public PacketReceived PacketReceivedEvent;
 
         public delegate void ChatMessageSent(PlayerData player, string message);
         public ChatMessageSent ChatMessageSentEvent;

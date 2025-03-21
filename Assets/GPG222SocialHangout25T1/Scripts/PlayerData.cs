@@ -1,9 +1,12 @@
+using UnityEngine;
+
 namespace Networking.Core
 {
+    [System.Serializable]
     public class PlayerData
     {
-        public int DuckID { get; private set; }
-        public string Username { get; private set; }
+        [SerializeField] public int DuckID { get; private set; }
+        [SerializeField] public string Username { get; private set; }
 
         public PlayerData(int duckID, string username)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Networking.Core;
 using Networking.Packets;
 using TMPro;
@@ -10,29 +11,37 @@ namespace Networking.UI
     public class ChatManager : MonoBehaviour
     {
         private Client _client;
+        
+        [Header("UI Elements")]
         [SerializeField] private Button _chatButton;
         [SerializeField] private TMP_Text _chatBoxText;
         [SerializeField] private TMP_InputField _chatInput;
-
+        [SerializeField] private List<Color> _chatColors;
         private void Start()
         {
             _client = Client.Instance;
             
             _client.ChatMessageSentEvent += OnChatMessageSend;
             _client.ChatMessageReceivedEvent += OnChatMessageReceived;
+            
+            _chatButton.onClick.AddListener((() =>
+            {
+                _client.SendChatMessage(_chatInput.text);
+            }));
+        }
+
+        private void OnDestroy()
+        {
+            _client.ChatMessageSentEvent -= OnChatMessageSend;
+            _client.ChatMessageReceivedEvent -= OnChatMessageReceived;
         }
 
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Return)) // Send chat message when you hit enter
             {
-                OnChatMessageSend(_client.PlayerData, _chatInput.text.Trim());
+                _client.SendChatMessage(_chatInput.text);
             }
-        }
-
-        public void OnChatButtonClicked()
-        {
-            OnChatMessageSend(_client.PlayerData, _chatInput.text.Trim());
         }
 
         /// <summary>
@@ -40,20 +49,22 @@ namespace Networking.UI
         /// </summary>
         private void OnChatMessageSend(PlayerData playerData, string message)
         {
-            _chatInput.text = ""; // Reset the input box
-
-            // Adds message with a leading new line if not the first line
-            _chatBoxText.text += FormatMessage(_client.PlayerData, message);
+            // Adds the message we sent
+            _chatBoxText.text += FormatMessage(playerData, message);
+            // _chatBoxText.text += $"{playerData.Username} sent: {message}\n";
         }
 
         private void OnChatMessageReceived(PlayerData player, string message)
         {
+            // TODO: Add color to messages based on DuckID
             _chatBoxText.text += FormatMessage(player, message);
         }
 
         private string FormatMessage(PlayerData player, string message)
         {
-            string formattedMessage = $"{player.Username}#{player.DuckID}: {message}\n";
+            // TODO: Add color from Duck ID
+            Color color = _chatColors[player.DuckID];
+            string formattedMessage = $"<{color}>{player.Username}#{player.DuckID}<{color}>: {message}\n";
             return formattedMessage;
         }
     }
