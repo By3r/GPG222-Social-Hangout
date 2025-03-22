@@ -8,11 +8,8 @@ namespace Networking.Core
         public delegate void ServerConnect();
         public ServerConnect ServerConnectEvent;
         
-        public delegate void ClientJoinedLobby();
-        public ClientJoinedLobby LobbyJoinEvent;
-        
-        public delegate void PacketReceived(BasePacket packet);
-        public PacketReceived PacketReceivedEvent;
+        public delegate void PlayerConnected(PlayerData player);
+        public PlayerConnected PlayerConnectedEvent;
 
         public delegate void ChatMessageSent(PlayerData player, string message);
         public ChatMessageSent ChatMessageSentEvent;

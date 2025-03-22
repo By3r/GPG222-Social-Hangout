@@ -17,7 +17,8 @@ namespace Networking.Packets
             None = 0,
             Join = 1,
             ClientList = 2,
-            Message = 3
+            Message = 3,
+            Instantiate = 4,
         }
         public PacketType Type { get; set; }
         public PlayerData PlayerData { get; set; }
@@ -25,13 +26,13 @@ namespace Networking.Packets
         public BasePacket()
         {
             Type = PacketType.None;
-            PlayerData = null;
+            PlayerData = new PlayerData();
         }
 
         public BasePacket(PacketType type)
         {
             Type = type;
-            PlayerData = null;
+            PlayerData = new PlayerData();
         }
 
         public BasePacket(PacketType type, PlayerData playerData)

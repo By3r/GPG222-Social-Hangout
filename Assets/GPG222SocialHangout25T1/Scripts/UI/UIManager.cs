@@ -47,16 +47,13 @@ namespace Networking.UI
             _duckChosen = duckChosen;
             
             // Making the new player
-            PlayerData playerData = new PlayerData(_duckChosen, username);
-            Debug.Log(playerData.Username + "|" + playerData.DuckID);
-            _client.PlayerData = playerData;
             if (addressField.text != "")
             {
-                _client.ConnectToServer(addressField.text);
+                _client.ConnectToServer(addressField.text, _duckChosen, username);
             }
             else
             {
-                _client.ConnectToServer("127.0.0.1");
+                _client.ConnectToServer("127.0.0.1", _duckChosen, username);
             }
         }
 

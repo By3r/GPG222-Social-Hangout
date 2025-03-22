@@ -37,7 +37,7 @@ namespace Networking.Packets
             return EndSerialize();
         }
 
-        public PlayerDataListPacket Deserialize(byte[] buffer, ref int bufferSize, ref int offset)
+        public new PlayerDataListPacket Deserialize(byte[] buffer, ref int bufferSize, ref int offset)
         {
             base.Deserialize(buffer, ref bufferSize, ref offset);
             

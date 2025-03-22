@@ -24,7 +24,6 @@ namespace Networking.Core
         // Debug Info
         [SerializeField] private TMP_Text _feedbackText;
         [SerializeField] private TMP_Text _serverCountText;
-        [SerializeField] private TMP_Text _lobbyCountText;
         [SerializeField] private Button _clearButton;
         
         // Start is called before the first frame update
@@ -41,7 +40,6 @@ namespace Networking.Core
             _clearButton.onClick.AddListener(ClearFeedbackText);
 
             _serverCountText.text = "Server Count: 0";
-            _lobbyCountText.text = "Lobby Count: 0";
         }
 
         // Update is called once per frame
@@ -95,10 +93,6 @@ namespace Networking.Core
                     
                     while (bufferSize > 0)
                     {
-                            // bp.Deserialize(buffer, ref bufferSize, ref offset);
-                        Debug.LogError($"Packet Type: {bp.Type}");
-                        Debug.LogError(
-                            $"Buffer Size: {bp.Size} | Packet Size: {bp.Size} | Offset: {offset}");
                         _feedbackText.text += $"Packet type: {bp.Type} | Size: {bp.Size} | Offset: {offset}\n";
 
                         switch (bp.Type)
@@ -110,21 +104,33 @@ namespace Networking.Core
                                 JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 
                                 _playersInLobby.Add(jp.PlayerData);
-                                PlayerDataListPacket pdlp = new PlayerDataListPacket(_playersInLobby);
                                 
-                                byte[] pdlb = pdlp.Serialize();
-                                BroadcastToAllPlayersInLobby(pdlb, i);
+                                // Send the join packet to everyone except the new client
+                                BroadcastToAllPlayersInLobby(jp.Serialize(), i);
+                                
+                                // Send all the clients in the lobby to the sender
+                                for (int j = 0; j < _playersInLobby.Count; j++)
+                                {
+                                    PlayerData pd = _playersInLobby[j];
+                                    JoinPacket jps = new JoinPacket(pd);
+                                    if (i == j) continue;
+                                    _clientsInServer[i].Send(jps.Serialize());
+                                }
+                                
                                 break;
                                 
                             case BasePacket.PacketType.ClientList:
-                                Debug.LogError("Server received Client List Packet");
                                 break;
                             
                             case BasePacket.PacketType.Message:
                                 MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 byte[] mpb = mp.Serialize();
                                 BroadcastToAllPlayersInLobby(mpb, i);
-                                Debug.LogError("Server received Message Packet");
+                                break;
+                            
+                            case BasePacket.PacketType.Instantiate:
+                                InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                BroadcastToAllPlayersInLobby(ip.Serialize(), i);
                                 break;
                             
                             default:
@@ -135,7 +141,7 @@ namespace Networking.Core
                         if  (stopPacketSpliting) {break;}
                     }
                     
-                    _feedbackText.text += "=====";
+                    _feedbackText.text += "=====\n";
                 }
             }
         }
@@ -147,7 +153,6 @@ namespace Networking.Core
             
             _feedbackText.text = "";
             _serverCountText.text = "Server Count: 0";
-            _lobbyCountText.text = "Lobby Count: 0";
         }
 
         private void BroadcastToAllPlayersInLobby(byte[] buffer, int sender)

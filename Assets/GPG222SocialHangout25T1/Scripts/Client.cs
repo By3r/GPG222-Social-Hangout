@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using Networking.Core.Lobby;
 using Networking.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Networking.Core
 {
@@ -17,8 +19,13 @@ namespace Networking.Core
         private PlayerData _playerData;
         public List<PlayerData> _playersInLobby = new List<PlayerData>();
         
+        
+        
         public List<PlayerData> PlayersInLobby { get { return _playersInLobby; } }
-        public PlayerData PlayerData { get; set; }
+        public PlayerData PlayerData
+        {
+            get { return _playerData; }
+        }
 
         public static Client Instance;
 
@@ -33,11 +40,6 @@ namespace Networking.Core
             else
             {
                 Destroy(this);
-            }
-
-            if (PlayerData == null)
-            {
-                PlayerData = new PlayerData();
             }
             
             ServerConnectEvent += ServerConnectEvent;
@@ -63,13 +65,13 @@ namespace Networking.Core
             }
         }
 
-        public void ConnectToServer(string ipAddress)
+        public void ConnectToServer(string ipAddress, int duckChosen, string playerName)
         {
             _ipAddress = ipAddress;
             _clientSocket.Connect(_ipAddress, _port);
             _clientSocket.Blocking = false;
             Debug.LogError("Client socket connected");
-            JoinLobby(PlayerData);
+            JoinLobby(duckChosen, playerName);
         }
 
         private void Update()
@@ -112,11 +114,13 @@ namespace Networking.Core
                                 if (!isInLobby)
                                 {
                                     _playersInLobby.Add(jp.PlayerData);
+                                    PlayerConnectedEvent(jp.PlayerData);
                                 }
                                 break;
                             
                             case BasePacket.PacketType.ClientList:
                                 // TODO: Add a client list packet to send a list of PlayerData for all the clients in the lobby or server
+                                Debug.LogError("Client list received");
                                 PlayerDataListPacket pdlp = new PlayerDataListPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 _playersInLobby = pdlp.Players;
                                 break;
@@ -124,6 +128,11 @@ namespace Networking.Core
                             case BasePacket.PacketType.Message:
                                 MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 ChatMessageReceivedEvent(mp.PlayerData, mp.Message);
+                                break;
+                            
+                            case BasePacket.PacketType.Instantiate:
+                                InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                InstantiateFromNetwork(ip);
                                 break;
                             
                             default:
@@ -138,9 +147,10 @@ namespace Networking.Core
             }
         }
 
-        public void JoinLobby(PlayerData playerData)
+        public void JoinLobby(int duckChosen, string username)
         {
-            _playerData = new PlayerData(playerData.DuckID, playerData.Username);
+            _playerData = new  PlayerData(duckChosen, username);
+            _playersInLobby.Add(_playerData);
             _clientSocket.Send(new JoinPacket(_playerData).Serialize());
             SceneManager.LoadScene(1);
         }
@@ -150,6 +160,32 @@ namespace Networking.Core
             byte[] buffer = new MessagePacket(PlayerData, message).Serialize();
             ChatMessageSentEvent(PlayerData, message);
             _clientSocket.Send(buffer);
+        }
+
+        public void InstantiateFromNetwork(InstantiatePacket packet)
+        {
+            GameObject prefab = Resources.Load<GameObject>(packet.PrefabName);
+            if (prefab != null)
+            {
+                GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
+                NetworkComponent nc = go.GetComponent<NetworkComponent>();
+                nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
+            }
+        }
+
+        public void InstantiateOverNetwork(string prefabName, Vector3 position, Quaternion rotation)
+        {
+            GameObject prefab = Resources.Load<GameObject>(prefabName);
+            if (prefab != null)
+            {
+                GameObject go = Instantiate(prefab, position, rotation);
+                NetworkComponent nc = go.GetComponent<NetworkComponent>();
+                var objectID = System.Guid.NewGuid();
+                nc.SetObjectData(objectID.ToString(), _playerData.DuckID);
+
+                InstantiatePacket ip = new InstantiatePacket(_playerData, objectID.ToString(), prefabName, position, rotation);
+                _clientSocket.Send(ip.Serialize());
+            }
         }
     }
 }

@@ -255,7 +255,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2099485842}
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
---- !u!1 &203198188
+--- !u!1 &373300596
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -263,9 +263,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 203198191}
-  - component: {fileID: 203198190}
-  - component: {fileID: 203198189}
+  - component: {fileID: 373300599}
+  - component: {fileID: 373300598}
+  - component: {fileID: 373300597}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
@@ -273,25 +273,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &203198189
+--- !u!81 &373300597
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 203198188}
+  m_GameObject: {fileID: 373300596}
   m_Enabled: 1
---- !u!20 &203198190
+--- !u!20 &373300598
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 203198188}
+  m_GameObject: {fileID: 373300596}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 1, g: 0.25386578, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -332,16 +332,16 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &203198191
+--- !u!4 &373300599
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 203198188}
+  m_GameObject: {fileID: 373300596}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.12989151, y: 0, z: 0, w: 0.9915283}
+  m_LocalPosition: {x: 0, y: 2.4199998, z: -9.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -882,8 +882,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -958,6 +958,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1486196148}
+  - component: {fileID: 1486196149}
   m_Layer: 0
   m_Name: --- Ducks ---
   m_TagString: Untagged
@@ -980,6 +981,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1486196149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1486196147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0e95be2b5194c76a9352355d41fad96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _spawnPoints:
+  - {fileID: 1093920904}
+  - {fileID: 1267394533}
+  - {fileID: 186920028}
+  - {fileID: 1262908546}
+  _prefabBaseName: Prefabs/Ducks
 --- !u!1 &2099485841
 GameObject:
   m_ObjectHideFlags: 0
@@ -1026,4 +1045,4 @@ SceneRoots:
   - {fileID: 1486196148}
   - {fileID: 1226998392}
   - {fileID: 2099485842}
-  - {fileID: 203198191}
+  - {fileID: 373300599}
