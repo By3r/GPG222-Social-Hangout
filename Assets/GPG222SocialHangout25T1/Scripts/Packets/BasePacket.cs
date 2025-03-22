@@ -19,6 +19,8 @@ namespace Networking.Packets
             ClientList = 2,
             Message = 3,
             Instantiate = 4,
+            Position = 5,
+            Destroy = 6,
         }
         public PacketType Type { get; set; }
         public PlayerData PlayerData { get; set; }

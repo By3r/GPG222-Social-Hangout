@@ -10,6 +10,12 @@ namespace Networking.Core
         
         public delegate void PlayerConnected(PlayerData player);
         public PlayerConnected PlayerConnectedEvent;
+        
+        public delegate void PositionPacketReceived(PositionPacket packet);
+        public PositionPacketReceived PositionPacketReceivedEvent;
+        
+        public delegate void DestroyPacketReceived(DestroyPacket packet);
+        public DestroyPacketReceived DestroyPacketReceivedEvent;
 
         public delegate void ChatMessageSent(PlayerData player, string message);
         public ChatMessageSent ChatMessageSentEvent;

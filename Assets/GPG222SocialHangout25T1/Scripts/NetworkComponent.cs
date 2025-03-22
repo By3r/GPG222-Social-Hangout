@@ -1,3 +1,5 @@
+using System;
+using Networking.Core.Syncing;
 using UnityEngine;
 
 namespace Networking.Core
@@ -6,6 +8,11 @@ namespace Networking.Core
     {
         public string GameObjectID { get; private set; }
         public int OwnerID { get; private set; }
+
+        private void OnDestroy()
+        {
+            SyncManager.DestroyOverNetwork(gameObject);
+        }
 
         public void SetObjectData(string objectID, int ownerID)
         {

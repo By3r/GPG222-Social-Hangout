@@ -99,15 +99,15 @@ namespace Networking.Core
                         {
                             case BasePacket.PacketType.None:
                                 break;
-                            
+
                             case BasePacket.PacketType.Join:
                                 JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                
+
                                 _playersInLobby.Add(jp.PlayerData);
-                                
+
                                 // Send the join packet to everyone except the new client
                                 BroadcastToAllPlayersInLobby(jp.Serialize(), i);
-                                
+
                                 // Send all the clients in the lobby to the sender
                                 for (int j = 0; j < _playersInLobby.Count; j++)
                                 {
@@ -116,28 +116,39 @@ namespace Networking.Core
                                     if (i == j) continue;
                                     _clientsInServer[i].Send(jps.Serialize());
                                 }
-                                
+
                                 break;
-                                
+
                             case BasePacket.PacketType.ClientList:
                                 break;
-                            
+
                             case BasePacket.PacketType.Message:
                                 MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 byte[] mpb = mp.Serialize();
                                 BroadcastToAllPlayersInLobby(mpb, i);
                                 break;
-                            
+
                             case BasePacket.PacketType.Instantiate:
-                                InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                InstantiatePacket ip =
+                                    new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(ip.Serialize(), i);
                                 break;
+
+                            case BasePacket.PacketType.Position:
+                                PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                BroadcastToAllPlayersInLobby(pp.Serialize(), i);
+                                break;
                             
+                            case BasePacket.PacketType.Destroy:
+                                DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                BroadcastToAllPlayersInLobby(dp.Serialize(), i);
+                                break;
+
                             default:
                                 stopPacketSpliting = true;
                                 break;
                         }
-                        
+
                         if  (stopPacketSpliting) {break;}
                     }
                     

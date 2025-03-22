@@ -135,6 +135,16 @@ namespace Networking.Core
                                 InstantiateFromNetwork(ip);
                                 break;
                             
+                            case BasePacket.PacketType.Position:
+                                PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                PositionPacketReceivedEvent(pp);
+                                break;
+                            
+                            case BasePacket.PacketType.Destroy:
+                                DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                DestroyPacketReceivedEvent(dp);
+                                break;
+                            
                             default:
                                 break;
                         }
@@ -186,6 +196,16 @@ namespace Networking.Core
                 InstantiatePacket ip = new InstantiatePacket(_playerData, objectID.ToString(), prefabName, position, rotation);
                 _clientSocket.Send(ip.Serialize());
             }
+        }
+
+        public void SendPositionPacket(PositionPacket packet)
+        {
+            _clientSocket.Send(packet.Serialize());
+        }
+
+        public void SendDestroyPacket(DestroyPacket packet)
+        {
+            _clientSocket.Send(packet.Serialize());
         }
     }
 }
