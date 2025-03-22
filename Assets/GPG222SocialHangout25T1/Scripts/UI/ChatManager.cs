@@ -17,6 +17,7 @@ namespace Networking.UI
         [SerializeField] private TMP_Text _chatBoxText;
         [SerializeField] private TMP_InputField _chatInput;
         [SerializeField] private List<Color> _chatColors;
+        [SerializeField] private List<string> _colorCodes;
         private void Start()
         {
             _client = Client.Instance;
@@ -63,8 +64,8 @@ namespace Networking.UI
         private string FormatMessage(PlayerData player, string message)
         {
             // TODO: Add color from Duck ID
-            Color color = _chatColors[player.DuckID];
-            string formattedMessage = $"<{color}>{player.Username}#{player.DuckID}<{color}>: {message}\n";
+            string color = _colorCodes[player.DuckID];
+            string formattedMessage = $"<color=#{color}>{player.Username}#{player.DuckID}</color>: {message}\n";
             return formattedMessage;
         }
     }

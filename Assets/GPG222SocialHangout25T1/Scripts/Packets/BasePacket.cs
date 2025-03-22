@@ -28,6 +28,12 @@ namespace Networking.Packets
             PlayerData = null;
         }
 
+        public BasePacket(PacketType type)
+        {
+            Type = type;
+            PlayerData = null;
+        }
+
         public BasePacket(PacketType type, PlayerData playerData)
         {
             Type = type;

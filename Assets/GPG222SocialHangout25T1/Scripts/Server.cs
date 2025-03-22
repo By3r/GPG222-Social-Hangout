@@ -18,10 +18,8 @@ namespace Networking.Core
         private Socket server;
 
         // Client info
-        private List<Socket> _clientsInLobby = new List<Socket>();
         private List<Socket> _clientsInServer = new List<Socket>();
         private List<PlayerData> _playersInLobby = new List<PlayerData>();
-        public List<PlayerData> PlayersInLobby { get; }
         
         // Debug Info
         [SerializeField] private TMP_Text _feedbackText;
@@ -60,12 +58,8 @@ namespace Networking.Core
                 // Add the client to the list of clients on the server if they aren't already
                 _clientsInServer.Add(newClient);
                 // _feedbackText.text += $"Client with socket {newClient} has been added to the list of clients in the server\n";
-                _feedbackText.text += $"Clients connected to server: {+_clientsInServer.Count} | Clients in lobby: {_clientsInLobby.Count}\n";
+                _feedbackText.text += $"Clients connected to server: {+_clientsInServer.Count}\n";
                 _serverCountText.text = $"Server Count: {_clientsInServer.Count}\n";
-                _lobbyCountText.text = $"Lobby Count: {_clientsInLobby.Count}\n";
-                if (!_clientsInServer.Contains(newClient))
-                {
-                }
             }
             catch (SocketException e) // Otherwise print out the error Message
             {
@@ -114,8 +108,12 @@ namespace Networking.Core
                             
                             case BasePacket.PacketType.Join:
                                 JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                byte[] jpb = jp.Serialize();
-                                BroadcastToAllPlayersInLobby(jpb, i);
+                                
+                                _playersInLobby.Add(jp.PlayerData);
+                                PlayerDataListPacket pdlp = new PlayerDataListPacket(_playersInLobby);
+                                
+                                byte[] pdlb = pdlp.Serialize();
+                                BroadcastToAllPlayersInLobby(pdlb, i);
                                 break;
                                 
                             case BasePacket.PacketType.ClientList:
@@ -144,7 +142,6 @@ namespace Networking.Core
 
         public void ResetServer()
         {
-            _clientsInLobby.Clear();
             _clientsInServer.Clear();
             _playersInLobby.Clear();
             

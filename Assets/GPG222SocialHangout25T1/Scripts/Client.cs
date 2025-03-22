@@ -117,6 +117,8 @@ namespace Networking.Core
                             
                             case BasePacket.PacketType.ClientList:
                                 // TODO: Add a client list packet to send a list of PlayerData for all the clients in the lobby or server
+                                PlayerDataListPacket pdlp = new PlayerDataListPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                _playersInLobby = pdlp.Players;
                                 break;
                             
                             case BasePacket.PacketType.Message:
