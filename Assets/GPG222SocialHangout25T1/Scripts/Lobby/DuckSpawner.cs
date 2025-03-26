@@ -10,6 +10,7 @@ namespace Networking.Core.Lobby
         
         [SerializeField] private List<Transform> _spawnPoints = new List<Transform>();
         public Dictionary<int, string> _prefabNames = new Dictionary<int, string>();
+        public List<int> _playersInLobby = new();
         [SerializeField] private string _prefabBaseName;
 
         private void Start()
@@ -28,7 +29,15 @@ namespace Networking.Core.Lobby
 
         public void SpawnPlayer(PlayerData player)
         {
-            _client.InstantiateOverNetwork(_prefabNames[_client.PlayerData.DuckID], _spawnPoints[_client.PlayerData.DuckID].position, _spawnPoints[_client.PlayerData.DuckID].rotation);
+            if (_playersInLobby.Contains(player.DuckID))
+            {
+                return; // The player is already spawned in, then don't spawn it again
+            }
+            else
+            {
+                _playersInLobby.Add(player.DuckID);
+                _client.InstantiateOverNetwork(_prefabNames[_client.PlayerData.DuckID], _spawnPoints[_client.PlayerData.DuckID].position, _spawnPoints[_client.PlayerData.DuckID].rotation);
+            }
         }
     }
 }

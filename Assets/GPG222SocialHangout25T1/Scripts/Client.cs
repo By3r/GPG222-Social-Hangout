@@ -114,7 +114,10 @@ namespace Networking.Core
                                 if (!isInLobby)
                                 {
                                     _playersInLobby.Add(jp.PlayerData);
-                                    PlayerConnectedEvent(jp.PlayerData);
+                                    if (PlayerConnectedEvent != null)
+                                    {
+                                        PlayerConnectedEvent(jp.PlayerData);
+                                    }
                                 }
                                 break;
                             
