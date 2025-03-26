@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -12,7 +10,7 @@ namespace Networking.Core
 {
     public class Server : MonoBehaviour
     {
-        // Server Connection info
+        [Header("Server Connection info")]
         [SerializeField] private string _ipAddress = "127.0.0.1";
         [SerializeField] private int _port = 5500;
         private Socket server;
@@ -20,13 +18,12 @@ namespace Networking.Core
         // Client info
         private List<Socket> _clientsInServer = new List<Socket>();
         private List<PlayerData> _playersInLobby = new List<PlayerData>();
-        
-        // Debug Info
+
+        [Header("Debug Info")]
         [SerializeField] private TMP_Text _feedbackText;
         [SerializeField] private TMP_Text _serverCountText;
         [SerializeField] private Button _clearButton;
-        
-        // Start is called before the first frame update
+
         void Start()
         {
             // Spin up the server
@@ -36,13 +33,11 @@ namespace Networking.Core
             server.Blocking = false;
             Debug.LogError("Server Started Up!");
             _feedbackText.text = "Server Started Up Successfully!\n";
-            
-            _clearButton.onClick.AddListener(ClearFeedbackText);
 
+            _clearButton.onClick.AddListener(ClearFeedbackText);
             _serverCountText.text = "Server Count: 0";
         }
 
-        // Update is called once per frame
         void Update()
         {
             try // Try to have a client connect
@@ -65,6 +60,7 @@ namespace Networking.Core
                 {
                     Debug.LogError(e.ToString());
                 }
+
             }
 
             if (_clientsInServer.Count == 0) // Only bother checking client stuff if there are clients
@@ -81,16 +77,16 @@ namespace Networking.Core
                     // Get the packets in the client's buffer
                     byte[] buffer = new byte[client.Available];
                     client.Receive(buffer); // Actually get the stuff in the client's buffer
-                    
+
                     // Set up buffer tracking for packet splitting
                     int bufferSize = buffer.Length;
                     int offset = 0;
                     bool stopPacketSpliting = false;
-                    
+
                     // Get the packet's type
                     BasePacket bp = new BasePacket();
-                    bp.Deserialize(buffer,ref bufferSize, ref offset);
-                    
+                    bp.Deserialize(buffer, ref bufferSize, ref offset);
+
                     while (bufferSize > 0)
                     {
                         _feedbackText.text += $"Packet type: {bp.Type} | Size: {bp.Size} | Offset: {offset}\n";
@@ -102,21 +98,30 @@ namespace Networking.Core
 
                             case BasePacket.PacketType.Join:
                                 JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                PlayerData newPlayer = jp.PlayerData;
 
-                                _playersInLobby.Add(jp.PlayerData);
-
-                                // Send the join packet to everyone except the new client
-                                BroadcastToAllPlayersInLobby(jp.Serialize(), i);
-
-                                // Send all the clients in the lobby to the sender
-                                for (int j = 0; j < _playersInLobby.Count; j++)
+                                // Using duck id and the player's username we only add them to existing player list if they exist
+                                bool alreadyInLobby = _playersInLobby.Exists(
+                                    p => p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username);
+                                if (!alreadyInLobby)
                                 {
-                                    PlayerData pd = _playersInLobby[j];
-                                    JoinPacket jps = new JoinPacket(pd);
-                                    if (i == j) continue;
-                                    _clientsInServer[i].Send(jps.Serialize());
+                                    _playersInLobby.Add(newPlayer);
+
+                                    for (int existingIndex = 0; existingIndex < _clientsInServer.Count; existingIndex++)
+                                    {
+                                        if (existingIndex == i) continue;
+                                        _clientsInServer[existingIndex].Send(jp.Serialize());
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.Log($" !!Server cs line 120!!: There is a duplicate of fuck ID {newPlayer.DuckID} and username {newPlayer.Username}");
                                 }
 
+                                List<PlayerData> clientList = _playersInLobby.FindAll(
+                                    p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
+                                PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
+                                _clientsInServer[i].Send(pdlp.Serialize());
                                 break;
 
                             case BasePacket.PacketType.ClientList:
@@ -138,7 +143,7 @@ namespace Networking.Core
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(pp.Serialize(), i);
                                 break;
-                            
+
                             case BasePacket.PacketType.Destroy:
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(dp.Serialize(), i);
@@ -149,9 +154,9 @@ namespace Networking.Core
                                 break;
                         }
 
-                        if  (stopPacketSpliting) {break;}
+                        if (stopPacketSpliting) { break; }
                     }
-                    
+
                     _feedbackText.text += "=====\n";
                 }
             }
@@ -161,7 +166,7 @@ namespace Networking.Core
         {
             _clientsInServer.Clear();
             _playersInLobby.Clear();
-            
+
             _feedbackText.text = "";
             _serverCountText.text = "Server Count: 0";
         }
@@ -171,7 +176,7 @@ namespace Networking.Core
             for (int i = 0; i < _clientsInServer.Count; i++)
             {
                 if (i == sender) continue;
-                
+
                 _clientsInServer[i].Send(buffer);
             }
         }

@@ -1,12 +1,8 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using Networking.Core.Lobby;
 using Networking.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Object = UnityEngine.Object;
 
 namespace Networking.Core
 {
@@ -18,9 +14,9 @@ namespace Networking.Core
 
         private PlayerData _playerData;
         public List<PlayerData> _playersInLobby = new List<PlayerData>();
-        
-        
-        
+
+
+
         public List<PlayerData> PlayersInLobby { get { return _playersInLobby; } }
         public PlayerData PlayerData
         {
@@ -41,7 +37,7 @@ namespace Networking.Core
             {
                 Destroy(this);
             }
-            
+
             ServerConnectEvent += ServerConnectEvent;
         }
 
@@ -83,7 +79,7 @@ namespace Networking.Core
                     // Get all the data from the buffer of data we have received
                     byte[] buffer = new byte[_clientSocket.Available];
                     _clientSocket.Receive(buffer);
-                    
+
                     int bufferSize = buffer.Length;
                     int offset = 0;
 
@@ -92,62 +88,61 @@ namespace Networking.Core
                         // Deserialize the base of the packet to expose its packet type
                         BasePacket basePacket = new BasePacket();
                         basePacket.Deserialize(buffer, ref bufferSize, ref offset);
-                        switch (basePacket.Type) 
+                        switch (basePacket.Type)
                         {
                             case BasePacket.PacketType.None:
                                 Debug.LogError("Packet type is None");
                                 break;
-                            
-                            case BasePacket.PacketType.Join:
-                                JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize,  ref offset);
-                                bool isInLobby = false;
-                                foreach (PlayerData playerData in _playersInLobby)
-                                {
-                                    if (jp.PlayerData.Username == playerData.Username &&
-                                        jp.PlayerData.DuckID == playerData.DuckID)
-                                    {
-                                        isInLobby = true;
-                                        break;
-                                    }
-                                }
 
+                            case BasePacket.PacketType.Join:
+                                JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                bool isInLobby = _playersInLobby.Exists(p => p.Username == jp.PlayerData.Username && p.DuckID == jp.PlayerData.DuckID); // -delete later- determined by checking the user and duck id to confirm presence in lobby. ///
                                 if (!isInLobby)
                                 {
                                     _playersInLobby.Add(jp.PlayerData);
-                                    if (PlayerConnectedEvent != null)
-                                    {
-                                        PlayerConnectedEvent(jp.PlayerData);
-                                    }
+                                    PlayerConnectedEvent?.Invoke(jp.PlayerData);
                                 }
                                 break;
-                            
+
                             case BasePacket.PacketType.ClientList:
                                 // TODO: Add a client list packet to send a list of PlayerData for all the clients in the lobby or server
                                 Debug.LogError("Client list received");
                                 PlayerDataListPacket pdlp = new PlayerDataListPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                _playersInLobby = pdlp.Players;
+                                foreach (PlayerData pd in pdlp.Players)
+                                {
+                                    // Don't include our data (current player data)
+                                    if (pd.Username == _playerData.Username)
+                                        continue;
+                                    bool exists = _playersInLobby.Exists(
+                                        p => p.Username == pd.Username && p.DuckID == pd.DuckID);
+                                    if (!exists)
+                                    {
+                                        _playersInLobby.Add(pd);
+                                        PlayerConnectedEvent?.Invoke(pd);
+                                    }
+                                }
                                 break;
-                            
+
                             case BasePacket.PacketType.Message:
                                 MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 ChatMessageReceivedEvent(mp.PlayerData, mp.Message);
                                 break;
-                            
+
                             case BasePacket.PacketType.Instantiate:
                                 InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 InstantiateFromNetwork(ip);
                                 break;
-                            
+
                             case BasePacket.PacketType.Position:
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 PositionPacketReceivedEvent(pp);
                                 break;
-                            
+
                             case BasePacket.PacketType.Destroy:
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 DestroyPacketReceivedEvent(dp);
                                 break;
-                            
+
                             default:
                                 break;
                         }
@@ -162,7 +157,7 @@ namespace Networking.Core
 
         public void JoinLobby(int duckChosen, string username)
         {
-            _playerData = new  PlayerData(duckChosen, username);
+            _playerData = new PlayerData(duckChosen, username);
             _playersInLobby.Add(_playerData);
             _clientSocket.Send(new JoinPacket(_playerData).Serialize());
             SceneManager.LoadScene(1);

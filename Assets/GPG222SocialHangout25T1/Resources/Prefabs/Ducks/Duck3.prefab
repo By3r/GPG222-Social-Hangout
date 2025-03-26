@@ -190,7 +190,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7d09b869a0861f4418590778b4c03a40, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.64
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 7d09b869a0861f4418590778b4c03a40, type: 3}
       propertyPath: m_LocalPosition.z
@@ -322,6 +322,7 @@ MonoBehaviour:
   Floaters: []
   WaterHeight: 0
   FloatersUnderWaterThreshold: 0
+  _isUnderWater: 0
 --- !u!4 &715988833709999264 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7d09b869a0861f4418590778b4c03a40, type: 3}
