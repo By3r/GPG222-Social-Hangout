@@ -205,5 +205,11 @@ namespace Networking.Core
         {
             _clientSocket.Send(packet.Serialize());
         }
+
+        public void SendReadyStatus(bool isReady)
+        {
+            var readyPacket = new ReadinessPacket(_playerData, isReady);
+            _clientSocket.Send(readyPacket.Serialize());
+        }
     }
 }
