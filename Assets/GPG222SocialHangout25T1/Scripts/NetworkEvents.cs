@@ -22,5 +22,8 @@ namespace Networking.Core
         
         public delegate void ChatMessageReceived(PlayerData player, string message);
         public ChatMessageReceived ChatMessageReceivedEvent;
+
+        public delegate void PlayerReadinessChanged(PlayerData player, bool isReady);
+        public PlayerReadinessChanged PlayerReadinessChangedEvent;
     }
 }
