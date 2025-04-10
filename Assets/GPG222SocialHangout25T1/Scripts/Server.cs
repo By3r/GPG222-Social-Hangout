@@ -18,6 +18,8 @@ namespace Networking.Core
         // Client info
         private List<Socket> _clientsInServer = new List<Socket>();
         private List<PlayerData> _playersInLobby = new List<PlayerData>();
+        [Tooltip("To track each player's readiness")]
+        private Dictionary<int, bool> _playerReadyStatus = new Dictionary<int, bool>();
 
         [Header("Debug Info")]
         [SerializeField] private TMP_Text _feedbackText;
@@ -115,7 +117,7 @@ namespace Networking.Core
                                 }
                                 else
                                 {
-                                    Debug.Log($" !!Server cs line 120!!: There is a duplicate of fuck ID {newPlayer.DuckID} and username {newPlayer.Username}");
+                                    Debug.Log($" !!Server cs line 120!!: There is a duplicate of duck ID {newPlayer.DuckID} and username {newPlayer.Username}");
                                 }
 
                                 List<PlayerData> clientList = _playersInLobby.FindAll(
@@ -148,6 +150,26 @@ namespace Networking.Core
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(dp.Serialize(), i);
                                 break;
+                            case BasePacket.PacketType.ReadyStatus:
+                                {
+                                    ReadinessPacket readyPacket = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    _playerReadyStatus[readyPacket.PlayerData.DuckID] = readyPacket.IsReady;
+
+                                    _feedbackText.text += $"{readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n";
+
+                                    #region Checks if all players are ready
+                                    if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
+                                    {
+                                        _feedbackText.text += "== All players are READY! ==\n";
+                                        // TODO: Hide the readiness button
+                                        // TODO: Enable minigame voting buttons (aka two for now)
+                                        _feedbackText.text += "Voting commences now!";
+                                    }
+                                    #endregion
+                                    break;
+                                }
+
+
 
                             default:
                                 stopPacketSpliting = true;
