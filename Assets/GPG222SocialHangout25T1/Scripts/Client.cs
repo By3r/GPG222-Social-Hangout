@@ -15,7 +15,7 @@ namespace Networking.Core
         private PlayerData _playerData;
         public List<PlayerData> _playersInLobby = new List<PlayerData>();
 
-
+        public PlayerData SceneHost;
 
         public List<PlayerData> PlayersInLobby { get { return _playersInLobby; } }
         public PlayerData PlayerData
@@ -146,6 +146,11 @@ namespace Networking.Core
                                 ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 PlayerReadinessChangedEvent?.Invoke(rp.PlayerData, rp.IsReady);
                                 break;
+                            
+                            case BasePacket.PacketType.SceneChange:
+                                SceneChangePacket scp = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                SceneManager.LoadScene(scp.SceneID);
+                                break;
 
                             default:
                                 break;
@@ -164,7 +169,7 @@ namespace Networking.Core
             _playerData = new PlayerData(duckChosen, username);
             _playersInLobby.Add(_playerData);
             _clientSocket.Send(new JoinPacket(_playerData).Serialize());
-            SceneManager.LoadScene(1);
+            SceneManager.LoadScene(1, LoadSceneMode.Single);
         }
 
         public void SendChatMessage(string message)

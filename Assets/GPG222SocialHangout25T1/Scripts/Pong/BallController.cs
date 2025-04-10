@@ -9,7 +9,14 @@ namespace Networking.Core.Pong
         [SerializeField] private float speed;
         private Rigidbody rb;
 
-        void OnCollisionEnter(Collision collision)
+        private void Start()
+        {
+            rb = GetComponent<Rigidbody>();
+            rb.velocity = Vector3.left * speed;
+            rb.velocity = Vector3.up * speed;
+        }
+
+        private void OnCollisionEnter(Collision collision)
         {
             if (collision.gameObject.name == "Player1Goal")
             {

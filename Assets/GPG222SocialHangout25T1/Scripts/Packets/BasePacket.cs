@@ -21,7 +21,8 @@ namespace Networking.Packets
             Instantiate = 4,
             Position = 5,
             Destroy = 6,
-            ReadyStatus = 7
+            ReadyStatus = 7,
+            SceneChange = 8,
         }
         public PacketType Type { get; set; }
         public PlayerData PlayerData { get; set; }

@@ -10,23 +10,27 @@ namespace Networking.Core
 {
     public class Server : MonoBehaviour
     {
-        [Header("Server Connection info")]
-        [SerializeField] private string _ipAddress = "127.0.0.1";
+        [Header("Server Connection info")] [SerializeField]
+        private string _ipAddress = "127.0.0.1";
+
         [SerializeField] private int _port = 5500;
-        private Socket server;
 
-        // Client info
-        private List<Socket> _clientsInServer = new List<Socket>();
-        private List<PlayerData> _playersInLobby = new List<PlayerData>();
-        [Tooltip("To track each player's readiness")]
-        private Dictionary<int, bool> _playerReadyStatus = new Dictionary<int, bool>();
+        [Header("Debug Info")] [SerializeField]
+        private TMP_Text _feedbackText;
 
-        [Header("Debug Info")]
-        [SerializeField] private TMP_Text _feedbackText;
         [SerializeField] private TMP_Text _serverCountText;
         [SerializeField] private Button _clearButton;
 
-        void Start()
+        // Client info
+        private List<Socket> _clientsInServer = new List<Socket>();
+
+        [Tooltip("To track each player's readiness")]
+        private Dictionary<int, bool> _playerReadyStatus = new Dictionary<int, bool>();
+
+        private List<PlayerData> _playersInLobby = new List<PlayerData>();
+        private Socket server;
+
+        private void Start()
         {
             // Spin up the server
             server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -40,7 +44,7 @@ namespace Networking.Core
             _serverCountText.text = "Server Count: 0";
         }
 
-        void Update()
+        private void Update()
         {
             try // Try to have a client connect
             {
@@ -62,7 +66,6 @@ namespace Networking.Core
                 {
                     Debug.LogError(e.ToString());
                 }
-
             }
 
             if (_clientsInServer.Count == 0) // Only bother checking client stuff if there are clients
@@ -120,7 +123,7 @@ namespace Networking.Core
                                     Debug.Log($" !!Server cs line 120!!: There is a duplicate of duck ID {newPlayer.DuckID} and username {newPlayer.Username}");
                                 }
 
-                                List<PlayerData> clientList = _playersInLobby.FindAll(
+                                var clientList = _playersInLobby.FindAll(
                                     p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
                                 PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
                                 _clientsInServer[i].Send(pdlp.Serialize());
@@ -150,25 +153,41 @@ namespace Networking.Core
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(dp.Serialize(), i);
                                 break;
+
                             case BasePacket.PacketType.ReadyStatus:
+                            {
+                                ReadinessPacket readyPacket = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                _playerReadyStatus[readyPacket.PlayerData.DuckID] = readyPacket.IsReady;
+
+                                _feedbackText.text += $"{readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n";
+
+                                #region Checks if all players are ready
+
+                                if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
                                 {
-                                    ReadinessPacket readyPacket = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                    _playerReadyStatus[readyPacket.PlayerData.DuckID] = readyPacket.IsReady;
+                                    _feedbackText.text += "== All players are READY! ==\n";
+                                    // TODO: Hide the readiness button
+                                    // TODO: Enable minigame voting buttons (aka two for now)
+                                    _feedbackText.text += "Voting commences now!";
 
-                                    _feedbackText.text += $"{readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n";
-
-                                    #region Checks if all players are ready
-                                    if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
+                                    if (_playersInLobby.Count % 2 == 0)
                                     {
-                                        _feedbackText.text += "== All players are READY! ==\n";
-                                        // TODO: Hide the readiness button
-                                        // TODO: Enable minigame voting buttons (aka two for now)
-                                        _feedbackText.text += "Voting commences now!";
+                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 2);
+                                        BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
+                                        _feedbackText.text += "Going to Pong minigame";
                                     }
-                                    #endregion
-                                    break;
+                                    else
+                                    {
+                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 3);
+                                        BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
+                                        _feedbackText.text += "Going to Dana minigame";
+                                    }
                                 }
 
+                                #endregion
+
+                                break;
+                            }
 
 
                             default:
@@ -195,11 +214,21 @@ namespace Networking.Core
 
         private void BroadcastToAllPlayersInLobby(byte[] buffer, int sender)
         {
-            for (int i = 0; i < _clientsInServer.Count; i++)
+            if (sender >= 0)
             {
-                if (i == sender) continue;
+                for (int i = 0; i < _clientsInServer.Count; i++)
+                {
+                    if (i == sender) continue;
 
-                _clientsInServer[i].Send(buffer);
+                    _clientsInServer[i].Send(buffer);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < _playersInLobby.Count; i++)
+                {
+                    _clientsInServer[i].Send(buffer);
+                }
             }
         }
 

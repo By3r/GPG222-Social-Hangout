@@ -1,21 +1,18 @@
 using System;
+using System.Collections.Generic;
 using Networking.Packets;
 using UnityEngine;
 
 namespace Networking.Core.Pong
 {
+    [RequireComponent(typeof(NetworkComponent))] [RequireComponent(typeof(Rigidbody))]
     public class PlayerController : MonoBehaviour
     {
-        [SerializeField] NetworkComponent networkComponent;
-
+        NetworkComponent networkComponent;
+        Rigidbody rb;
         [SerializeField] private float speed = 5f;
-
-        private void Awake()
-        {
-            Client.Instance.PositionPacketReceivedEvent += OnPositionPacketRecieved;
-        }
-
-        private void Update()
+        
+        private void FixedUpdate()
         {
             if (Input.GetKey(KeyCode.W))
             {
@@ -29,8 +26,12 @@ namespace Networking.Core.Pong
 
         public void OnMovePlayer(Vector3 moveDirection)
         {
-            networkComponent.gameObject.transform.position += moveDirection * speed * Time.deltaTime;
-            PositionPacket pp = new PositionPacket(Client.Instance.PlayerData, networkComponent.GameObjectID, networkComponent.gameObject.transform.position, networkComponent.gameObject.transform.rotation);
+            rb.velocity = moveDirection.normalized * speed;
+            PositionPacket pp = new PositionPacket(
+                Client.Instance.PlayerData, 
+                networkComponent.GameObjectID, 
+                networkComponent.gameObject.transform.position, 
+                networkComponent.gameObject.transform.rotation);
             Client.Instance.SendPositionPacket(pp);
         }
 
