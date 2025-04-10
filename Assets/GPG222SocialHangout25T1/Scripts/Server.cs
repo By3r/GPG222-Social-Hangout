@@ -29,7 +29,7 @@ namespace Networking.Core
             // Spin up the server
             server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             server.Bind(new IPEndPoint(IPAddress.Parse(_ipAddress), _port));
-            server.Listen(100);
+            server.Listen(4);
             server.Blocking = false;
             Debug.LogError("Server Started Up!");
             _feedbackText.text = "Server Started Up Successfully!\n";
