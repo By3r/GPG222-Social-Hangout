@@ -26,6 +26,8 @@ namespace Networking.Core
         [SerializeField] private TMP_Text _serverCountText;
         [SerializeField] private Button _clearButton;
 
+        private const int MinPlayersToStart = 2;
+
         void Start()
         {
             // Spin up the server
@@ -152,13 +154,17 @@ namespace Networking.Core
                                 break;
                             case BasePacket.PacketType.ReadyStatus:
                                 {
-                                    ReadinessPacket readyPacket = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                    _playerReadyStatus[readyPacket.PlayerData.DuckID] = readyPacket.IsReady;
+                                    ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    _playerReadyStatus[rp.PlayerData.DuckID] = rp.IsReady;
 
-                                    _feedbackText.text += $"{readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n";
+                                    _feedbackText.text += $"{rp.PlayerData.Username}'s readiness status is: {rp.IsReady}\n";
 
-                                    #region Checks if all players are ready
-                                    if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
+                                    #region Check if there are enough players to start (readiness ignored till the min requirement is met)
+                                    bool hasEnoughPlayers = _playersInLobby.Count >= MinPlayersToStart;
+
+                                    bool allReady = hasEnoughPlayers && _playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false);
+
+                                    if (allReady)
                                     {
                                         _feedbackText.text += "== All players are READY! ==\n";
                                         // TODO: Hide the readiness button
@@ -166,6 +172,14 @@ namespace Networking.Core
                                         _feedbackText.text += "Voting commences now!";
                                     }
                                     #endregion
+                                    else if (hasEnoughPlayers)
+                                    {
+                                        _feedbackText.text += "Waiting for all players to be ready.\n";
+                                    }
+                                    else
+                                    {
+                                        _feedbackText.text += "Need at least 2 players to start.\n";
+                                    }
                                     break;
                                 }
 
