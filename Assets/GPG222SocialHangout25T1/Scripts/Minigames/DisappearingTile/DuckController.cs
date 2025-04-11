@@ -23,7 +23,14 @@ public class DuckController : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        Vector3 move = new Vector3(h, 0, v) * _moveSpeed * Time.deltaTime;
-        transform.Translate(move, Space.World);
+        Vector3 inputDirection = new Vector3(h, 0f, v).normalized;
+
+        if (inputDirection.sqrMagnitude > 0.01f)
+        {
+            transform.Translate(inputDirection * _moveSpeed * Time.deltaTime, Space.World);
+
+            Quaternion targetRot = Quaternion.LookRotation(inputDirection, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Time.deltaTime);
+        }
     }
 }
