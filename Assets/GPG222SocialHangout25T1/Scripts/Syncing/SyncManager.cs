@@ -13,6 +13,8 @@ namespace Networking.Core.Syncing
 
         private void Start()
         {
+            DontDestroyOnLoad(this);
+            
             _client = Client.Instance;
 
             _client.PositionPacketReceivedEvent += PositionPacketReceived;
@@ -48,6 +50,8 @@ namespace Networking.Core.Syncing
         {
             var ncs = FindObjectsByType<NetworkComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
+            if (ncs == null) return; // If there aren't any networked objects then stop
+            
             foreach (NetworkComponent nc in ncs)
             {
                 if (nc.OwnerID == packet.OwnerID && nc.GameObjectID == packet.ObjectID)

@@ -142,24 +142,36 @@ namespace Networking.Core
                                 InstantiatePacket ip =
                                     new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(ip.Serialize(), i);
+
+                                _feedbackText.text += $"  Prefab Name: {ip.PrefabName}\n";
+                                _feedbackText.text += $"  Owner ID: {ip.PlayerData.DuckID}\n";
+
                                 break;
 
                             case BasePacket.PacketType.Position:
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(pp.Serialize(), i);
+
+                                _feedbackText.text += $"  Owner ID: {pp.OwnerID}\n";
+                                _feedbackText.text += $"  Position: {pp.Position}\n";
+                                _feedbackText.text += $"  Rotation: {pp.Rotation}\n";
+
                                 break;
 
                             case BasePacket.PacketType.Destroy:
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(dp.Serialize(), i);
+
+                                _feedbackText.text += $"  Owner ID: {dp.PlayerData.DuckID}\n";
+                                _feedbackText.text += $"  Position: {dp.ObjectID}\n";
+
                                 break;
 
                             case BasePacket.PacketType.ReadyStatus:
-                            {
                                 ReadinessPacket readyPacket = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 _playerReadyStatus[readyPacket.PlayerData.DuckID] = readyPacket.IsReady;
 
-                                _feedbackText.text += $"{readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n";
+                                _feedbackText.text += $"  {readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n";
 
                                 #region Checks if all players are ready
 
@@ -170,25 +182,28 @@ namespace Networking.Core
                                     // TODO: Enable minigame voting buttons (aka two for now)
                                     _feedbackText.text += "Voting commences now!";
 
-                                    if (_playersInLobby.Count % 2 == 0)
+                                    // Minigamge sswitching
+                                    if (_playersInLobby.Count % 2 == 0) // If there is an even number of players, then they play the Pong minigame
                                     {
                                         SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 2);
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
-                                        _feedbackText.text += "Going to Pong minigame";
+                                        _feedbackText.text += "  Going to Pong minigame";
                                     }
-                                    else
+                                    else // Otherwise if there is an odd number of players they play Dana's minigame
                                     {
                                         SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 3);
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
-                                        _feedbackText.text += "Going to Dana minigame";
+                                        _feedbackText.text += "  Going to Dana minigame";
                                     }
                                 }
 
                                 #endregion
 
                                 break;
-                            }
-
+                            
+                            case BasePacket.PacketType.SceneChange:
+                                SceneChangePacket sceneChangePacket = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                break;
 
                             default:
                                 stopPacketSpliting = true;
@@ -197,8 +212,6 @@ namespace Networking.Core
 
                         if (stopPacketSpliting) { break; }
                     }
-
-                    _feedbackText.text += "=====\n";
                 }
             }
         }
@@ -207,6 +220,7 @@ namespace Networking.Core
         {
             _clientsInServer.Clear();
             _playersInLobby.Clear();
+            _playerReadyStatus.Clear();
 
             _feedbackText.text = "";
             _serverCountText.text = "Server Count: 0";

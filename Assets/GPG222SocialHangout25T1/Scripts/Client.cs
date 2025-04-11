@@ -13,15 +13,11 @@ namespace Networking.Core
         private Socket _clientSocket;
 
         private PlayerData _playerData;
-        public List<PlayerData> _playersInLobby = new List<PlayerData>();
-
+        private List<PlayerData> _playersInLobby = new List<PlayerData>();
         public PlayerData SceneHost;
-
+        public int SceneIndex = 0;
         public List<PlayerData> PlayersInLobby { get { return _playersInLobby; } }
-        public PlayerData PlayerData
-        {
-            get { return _playerData; }
-        }
+        public PlayerData PlayerData { get { return _playerData; } }
 
         public static Client Instance;
 
@@ -149,7 +145,9 @@ namespace Networking.Core
                             
                             case BasePacket.PacketType.SceneChange:
                                 SceneChangePacket scp = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                SceneHost = scp.PlayerData;
                                 SceneManager.LoadScene(scp.SceneID);
+                                SceneIndex =  scp.SceneID;
                                 break;
 
                             default:
@@ -170,6 +168,7 @@ namespace Networking.Core
             _playersInLobby.Add(_playerData);
             _clientSocket.Send(new JoinPacket(_playerData).Serialize());
             SceneManager.LoadScene(1, LoadSceneMode.Single);
+            SceneIndex = 1;
         }
 
         public void SendChatMessage(string message)

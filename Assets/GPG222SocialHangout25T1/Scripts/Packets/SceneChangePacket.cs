@@ -8,7 +8,7 @@ namespace Networking.Packets
 
         public SceneChangePacket() : base(PacketType.SceneChange)
         {
-            
+            SceneID = -1;
         }
         
         public SceneChangePacket(PlayerData playerData, int sceneID) : base(PacketType.SceneChange, playerData)

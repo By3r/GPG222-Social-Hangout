@@ -1,30 +1,37 @@
+using System;
+using Networking.Packets;
 using UnityEngine;
 
 namespace Networking.Core.Pong
 {
+    /// <summary>
+    /// This handles the control of the Pong ball
+    /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(BoxCollider))]
+    [RequireComponent(typeof(NetworkComponent))]
     public class BallController : MonoBehaviour
     {
-        [SerializeField] private float speed;
-        private Rigidbody rb;
+        private NetworkComponent _networkComponent;
+        [SerializeField] private float _speed;
+        private Rigidbody _rb;
+        public int LastPlayerContacted = -1;
 
-        private void Start()
+        private void OnEnable()
         {
-            rb = GetComponent<Rigidbody>();
-            rb.velocity = Vector3.left * speed;
-            rb.velocity = Vector3.up * speed;
+            _rb = GetComponent<Rigidbody>();
+            _rb.useGravity = false;
+            _rb.velocity = Vector3.up * _speed;
+            _rb.velocity = Vector3.left * _speed;
+            _rb.drag = 0f;
         }
 
-        private void OnCollisionEnter(Collision collision)
+        private void OnCollisionEnter(Collision other)
         {
-            if (collision.gameObject.name == "Player1Goal")
+            if (other.gameObject.CompareTag("Player"))
             {
-                transform.position = Vector3.zero; // TODO: Properly reset positions and stuff
-            }
-            else if (collision.gameObject.name == "Player2Goal")
-            {
-                transform.position = Vector3.zero; // TODO: Properly reset positions and stuff
+                NetworkComponent networkComponent = other.gameObject.GetComponent<NetworkComponent>();
+                LastPlayerContacted = networkComponent.OwnerID;
             }
         }
     }
