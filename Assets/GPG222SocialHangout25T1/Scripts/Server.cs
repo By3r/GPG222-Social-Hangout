@@ -101,32 +101,52 @@ namespace Networking.Core
                                 break;
 
                             case BasePacket.PacketType.Join:
-                                JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                PlayerData newPlayer = jp.PlayerData;
-
-                                // Using duck id and the player's username we only add them to existing player list if they exist
-                                bool alreadyInLobby = _playersInLobby.Exists(
-                                    p => p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username);
-                                if (!alreadyInLobby)
                                 {
-                                    _playersInLobby.Add(newPlayer);
+                                    JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    PlayerData newPlayer = jp.PlayerData;
 
-                                    for (int existingIndex = 0; existingIndex < _clientsInServer.Count; existingIndex++)
+                                    // Using duck id and the player's username we only add them to existing player list if they exist
+                                    bool alreadyInLobby = _playersInLobby.Exists(
+                                        p => p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username);
+
+                                    if (!alreadyInLobby)
                                     {
-                                        if (existingIndex == i) continue;
-                                        _clientsInServer[existingIndex].Send(jp.Serialize());
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.Log($" !!Server cs line 120!!: There is a duplicate of duck ID {newPlayer.DuckID} and username {newPlayer.Username}");
-                                }
+                                        _playersInLobby.Add(newPlayer);
 
-                                List<PlayerData> clientList = _playersInLobby.FindAll(
-                                    p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
-                                PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
-                                _clientsInServer[i].Send(pdlp.Serialize());
-                                break;
+                                        for (int existingIndex = 0; existingIndex < _clientsInServer.Count; existingIndex++)
+                                        {
+                                            if (existingIndex == i) continue;
+                                            _clientsInServer[existingIndex].Send(jp.Serialize());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Debug.Log($" !!Server cs line 120!!: There is a duplicate of duck ID {newPlayer.DuckID} and username {newPlayer.Username}");
+                                    }
+
+                                    List<PlayerData> clientList = _playersInLobby.FindAll(
+                                        p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
+                                    PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
+                                    _clientsInServer[i].Send(pdlp.Serialize());
+                                    #region to be deleted:  Send instantiation packet to the newly joined client
+                                    foreach (var existingPlayer in clientList)
+                                    {
+                                        string prefabName = $"Prefabs/Ducks/Duck{existingPlayer.DuckID}";
+                                        Vector3 position = Vector3.zero;
+                                        Quaternion rotation = Quaternion.identity;
+
+                                        InstantiatePacket instPacket = new InstantiatePacket(
+                                            existingPlayer,
+                                            System.Guid.NewGuid().ToString(),
+                                            prefabName,
+                                            position,
+                                            rotation);
+
+                                        _clientsInServer[i].Send(instPacket.Serialize());
+                                    }
+                                    #endregion
+                                    break;
+                                }
 
                             case BasePacket.PacketType.ClientList:
                                 break;

@@ -11,57 +11,59 @@ namespace Networking.Core.Lobby
         private Dictionary<int, string> _prefabNames = new Dictionary<int, string>();
         [SerializeField] private string _prefabBaseName;
 
-        private Dictionary<string, GameObject> _spawnedDucks = new Dictionary<string, GameObject>();
+        private HashSet<string> _spawnedKeys = new HashSet<string>();
 
         private void Start()
         {
             _client = Client.Instance;
             _client.PlayerConnectedEvent += OnPlayerConnected;
 
-            for (int i = 0; i < 4; i++) // change the 4 to a higher num if you decided to add more than 4 ducks later lol.
+            for (int i = 0; i < 4; i++)
             {
                 _prefabNames[i] = $"{_prefabBaseName}/Duck{i}";
-                // Debug.Log($"Adding a prefab for duck {i} {_prefabNames[i]}");
             }
 
+            // Spawn any ducks that were already known in the lobby list
             foreach (var existingPlayer in _client.PlayersInLobby)
             {
-                SpawnPlayer(existingPlayer);
+                OnPlayerConnected(existingPlayer);
             }
         }
 
-        private void OnPlayerConnected(PlayerData newPlayer)
+        private void OnPlayerConnected(PlayerData player)
         {
-            SpawnPlayer(newPlayer);
-        }
+            string key = $"{player.DuckID}_{player.Username}";
 
-        private void SpawnPlayer(PlayerData player)
-        {
-            string existingPlayerKey = $"{player.DuckID}_{player.Username}";
-
-            if (_spawnedDucks.ContainsKey(existingPlayerKey))
+            if (_spawnedKeys.Contains(key))
             {
-                // Duck/player already exists
-                return;
+                return; // Already spawned
             }
 
             if (!_prefabNames.ContainsKey(player.DuckID))
             {
-                // The quack prefab doesnt exist
+                Debug.LogWarning($"[DuckSpawner] Unknown DuckID {player.DuckID}");
                 return;
             }
 
             if (player.DuckID >= _spawnPoints.Count)
             {
-                //Spawn point doesnt exist for the corresponding duck youre trying to spawn
+                Debug.LogWarning($"[DuckSpawner] No spawn point for DuckID {player.DuckID}");
                 return;
             }
 
-            Debug.Log($"[DuckSpawner] Instantiating prefab {_prefabNames[player.DuckID]} at spawn point index {player.DuckID}");
-            GameObject duck = Instantiate(Resources.Load<GameObject>(_prefabNames[player.DuckID]),
-                _spawnPoints[player.DuckID].position,
-                _spawnPoints[player.DuckID].rotation);
-            _spawnedDucks.Add(existingPlayerKey, duck);
+            Debug.Log($"[DuckSpawner] Instantiating network duck for {player.Username}");
+
+            if (player.Username == _client.PlayerData.Username)
+            {
+                // Only the *owner* spawns their duck over the network
+                _client.InstantiateOverNetwork(
+                    _prefabNames[player.DuckID],
+                    _spawnPoints[player.DuckID].position,
+                    _spawnPoints[player.DuckID].rotation
+                );
+            }
+
+            _spawnedKeys.Add(key); // Mark as spawned regardless of who instantiated it
         }
     }
 }

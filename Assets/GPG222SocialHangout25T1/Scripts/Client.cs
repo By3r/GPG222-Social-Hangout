@@ -15,8 +15,6 @@ namespace Networking.Core
         private PlayerData _playerData;
         public List<PlayerData> _playersInLobby = new List<PlayerData>();
 
-
-
         public List<PlayerData> PlayersInLobby { get { return _playersInLobby; } }
         public PlayerData PlayerData
         {
@@ -105,7 +103,6 @@ namespace Networking.Core
                                 break;
 
                             case BasePacket.PacketType.ClientList:
-                                // TODO: Add a client list packet to send a list of PlayerData for all the clients in the lobby or server
                                 Debug.LogError("Client list received");
                                 PlayerDataListPacket pdlp = new PlayerDataListPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 foreach (PlayerData pd in pdlp.Players)
@@ -162,7 +159,11 @@ namespace Networking.Core
         public void JoinLobby(int duckChosen, string username)
         {
             _playerData = new PlayerData(duckChosen, username);
-            _playersInLobby.Add(_playerData);
+
+            if (!_playersInLobby.Exists(p => p.Username == username && p.DuckID == duckChosen))
+            {
+                _playersInLobby.Add(_playerData);
+            }
             _clientSocket.Send(new JoinPacket(_playerData).Serialize());
             SceneManager.LoadScene(1);
         }
@@ -180,10 +181,14 @@ namespace Networking.Core
             if (prefab != null)
             {
                 GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
-                NetworkComponent nc = go.GetComponent<NetworkComponent>();
-                nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
+                var nc = go.GetComponent<NetworkComponent>();
+                if (nc != null)
+                {
+                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
+                }
             }
         }
+
 
         public void InstantiateOverNetwork(string prefabName, Vector3 position, Quaternion rotation)
         {
@@ -191,11 +196,15 @@ namespace Networking.Core
             if (prefab != null)
             {
                 GameObject go = Instantiate(prefab, position, rotation);
-                NetworkComponent nc = go.GetComponent<NetworkComponent>();
-                var objectID = System.Guid.NewGuid();
-                nc.SetObjectData(objectID.ToString(), _playerData.DuckID);
 
-                InstantiatePacket ip = new InstantiatePacket(_playerData, objectID.ToString(), prefabName, position, rotation);
+                string objectID = System.Guid.NewGuid().ToString();
+                NetworkComponent nc = go.GetComponent<NetworkComponent>();
+                if (nc != null)
+                {
+                    nc.SetObjectData(objectID, _playerData.DuckID);
+                }
+
+                InstantiatePacket ip = new InstantiatePacket(_playerData, objectID, prefabName, position, rotation);
                 _clientSocket.Send(ip.Serialize());
             }
         }
