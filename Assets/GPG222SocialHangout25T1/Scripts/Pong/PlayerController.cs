@@ -28,19 +28,9 @@ namespace Networking.Core.Pong
                 {
                     OnMovePlayer(Vector3.down);
                 }
-            }
-            else // Otherwise get ready to send its updated position
-            {
-                _positionUpdateTimer += Time.fixedDeltaTime;
-                if (_positionUpdateTimer >= _positionUpdateFrequency)
+                else
                 {
-                    _positionUpdateTimer = 0f;
-                    PositionPacket pp = new PositionPacket(
-                        Client.Instance.PlayerData,
-                        _networkComponent.GameObjectID,
-                        transform.position,
-                        transform.rotation);
-                    Client.Instance.SendPositionPacket(pp);
+                    OnMovePlayer(Vector3.zero);
                 }
             }
         }

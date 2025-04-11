@@ -133,6 +133,7 @@ namespace Networking.Core
 
                             case BasePacket.PacketType.Position:
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                Debug.LogError("Position received");
                                 PositionPacketReceivedEvent(pp);
                                 break;
 
@@ -176,6 +177,12 @@ namespace Networking.Core
             }
         }
 
+        public PlayerData GetPlayerData(int duckID)
+        {
+            PlayerData playerData = PlayersInLobby.First(p => p.DuckID == duckID);
+            return playerData;
+        }
+
         public void JoinLobby(int duckChosen, string username)
         {
             _playerData = new PlayerData(duckChosen, username);
@@ -206,19 +213,31 @@ namespace Networking.Core
                         return; // Then we don't want to spawn it again
                     }
                 }
+                
+                GameObject prefab = Resources.Load<GameObject>(packet.PrefabName);
+                if (prefab != null)
+                {
+                    GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
+                    NetworkComponent nc = go.GetComponent<NetworkComponent>();
+                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
+                    return;
+                }
             }
-            
-            GameObject prefab = Resources.Load<GameObject>(packet.PrefabName);
-            if (prefab != null)
+            else
             {
-                GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
-                NetworkComponent nc = go.GetComponent<NetworkComponent>();
-                nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
-                Debug.LogError($"[test] from network: {nc.GameObjectID}");
+                Debug.LogError($"Instantiating {packet.PrefabName} from network");
+                GameObject prefab = Resources.Load<GameObject>(packet.PrefabName);
+                if (prefab != null)
+                {
+                    GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
+                    NetworkComponent nc = go.GetComponent<NetworkComponent>();
+                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
+                    Debug.LogError($"[test] from network: {nc.GameObjectID}");
+                }
             }
         }
 
-        public void InstantiateOverNetwork(string prefabName, Vector3 position, Quaternion rotation)
+        public void InstantiateOverNetwork(string prefabName, Vector3 position, Quaternion rotation, PlayerData player)
         {
             if (prefabName.Contains("Prefabs/Ducks")) // We only want to spawn ducks not in the scene yet
             {
@@ -228,10 +247,8 @@ namespace Networking.Core
                 {
                     if (nc.gameObject.name.Contains($"{prefabName[^1]}")) // If the networked object is the prefab being spawned
                     {
-                        Core.PlayerData  playerData = PlayersInLobby.FirstOrDefault(p => p.DuckID == nc.OwnerID);
-                        InstantiatePacket ip = new InstantiatePacket(playerData, nc.GameObjectID, prefabName, position, rotation);
+                        InstantiatePacket ip = new InstantiatePacket(player, nc.GameObjectID, prefabName, position, rotation);
                         _clientSocket.Send(ip.Serialize());
-                        Debug.LogError($"[test] {nc.GameObjectID}");
                         return; // Then we don't want to spawn it again
                     }
                 }

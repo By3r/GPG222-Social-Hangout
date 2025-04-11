@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Networking.Core.Pong
 {
     /// <summary>
-    /// Handle's spawning in players and keeping score
+    ///     Handle's spawning in players and keeping score
     /// </summary>
     public class PongController : MonoBehaviour
     {
@@ -26,7 +26,8 @@ namespace Networking.Core.Pong
             Client.Instance.InstantiateOverNetwork(
                 "Prefabs/Pong/Player",
                 playerTransforms[Client.Instance.PlayerData.DuckID].position,
-                playerTransforms[Client.Instance.PlayerData.DuckID].rotation);
+                playerTransforms[Client.Instance.PlayerData.DuckID].rotation,
+                Client.Instance.PlayerData);
 
             // TODO: Freeze position on the player object based on where they spawned (only move along one axis, but top and bottom are rotated)
 
@@ -37,14 +38,14 @@ namespace Networking.Core.Pong
             }
 
             // Instantiate the Pong Ball as well. this is so the network component can be set up correctly
-            if (Client.Instance.SceneHost == Client.Instance.PlayerData)
+            if (Client.Instance.SceneHost.DuckID == Client.Instance.PlayerData.DuckID)
             {
-                Client.Instance.InstantiateOverNetwork("Prefabs/Pong/Ball", Vector3.zero, Quaternion.identity);
+                Client.Instance.InstantiateOverNetwork("Prefabs/Pong/Ball", Vector3.zero, Quaternion.identity, Client.Instance.PlayerData);
             }
         }
 
         /// <summary>
-        /// Called when a goaled is scored in Pong
+        ///     Called when a goaled is scored in Pong
         /// </summary>
         /// <param name="PlayerID">The DuckID of the player that scored</param>
         public void ScoreGoal(int PlayerID)

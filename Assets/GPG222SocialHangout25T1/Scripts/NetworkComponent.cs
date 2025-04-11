@@ -1,5 +1,7 @@
 using System;
 using Networking.Core.Syncing;
+using Networking.Packets;
+using TMPro;
 using UnityEngine;
 
 namespace Networking.Core
@@ -8,16 +10,58 @@ namespace Networking.Core
     {
         public string GameObjectID { get; private set; }
         public int OwnerID { get; private set; }
+        
+        public Transform LastSyncedTransform { get; set; }
+
+        public TMP_Text OwnerText;
+        public TMP_Text ObjectIDText;
+
+        private void Awake()
+        {
+            Client.Instance.PositionPacketReceivedEvent += PositionPacketReceivedEvent;
+        }
 
         private void OnDestroy()
         {
-            SyncManager.DestroyOverNetwork(gameObject);
+            Client.Instance.PositionPacketReceivedEvent -= PositionPacketReceivedEvent;
+        }
+
+        private void FixedUpdate()
+        {
+            if (LastSyncedTransform != null)
+            {
+                transform.position = Vector3.Lerp(transform.position, LastSyncedTransform.position, Time.fixedDeltaTime);
+            }
+        }
+
+        private void PositionPacketReceivedEvent(PositionPacket pp)
+        {
+            Debug.LogError("PP received");
+            if (pp.OwnerID == OwnerID)
+            {
+                if (GameObjectID == pp.ObjectID)
+                {
+                    LastSyncedTransform.position = pp.Position;
+                    LastSyncedTransform.rotation = pp.Rotation;
+                }
+            }
         }
 
         public void SetObjectData(string objectID, int ownerID)
         {
             GameObjectID = objectID;
             OwnerID = ownerID;
+
+            if (OwnerText != null)
+            {
+                OwnerText.text = ownerID.ToString();
+            }
+            if (ObjectIDText != null)
+            {
+                ObjectIDText.text = objectID;
+            }
+            
+            LastSyncedTransform = transform;
         }
     }
 }

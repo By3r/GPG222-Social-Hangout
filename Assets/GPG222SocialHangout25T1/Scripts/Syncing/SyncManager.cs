@@ -18,38 +18,41 @@ namespace Networking.Core.Syncing
             
             _client = Client.Instance;
 
-            _client.PositionPacketReceivedEvent += PositionPacketReceived;
             _client.DestroyPacketReceivedEvent += DestroyFromNetwork;
         }
 
         private void OnDestroy()
         {
-            _client.PositionPacketReceivedEvent -= PositionPacketReceived;
             _client.DestroyPacketReceivedEvent -= DestroyFromNetwork;
         }
 
         private void FixedUpdate()
         {
+            if (_client.PlayersInLobby.Count == 1) return;
+            
             _syncCounter++;
-            if (_syncCounter == _syncFrequency)
+            if (_syncCounter >= _syncFrequency)
             {
-                
+                _syncCounter = 0;
                 var ncs = FindObjectsByType<NetworkComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None); // Get all networked GameObject in the scene
                 
                 if (ncs == null) return; // If there aren't any networked objects then stop
                 
                 foreach (NetworkComponent nc in ncs) // For each object, send the position and rotation of our owned objects
                 {
-                    if (nc.OwnerID != _client.PlayerData.DuckID) continue;
-                    
-                    PositionPacket pp  = new PositionPacket(_client.PlayerData, nc.GameObjectID, nc.transform.position, nc.transform.rotation);
-                    _client.SendPositionPacket(pp);
+                    if (nc.OwnerID == _client.PlayerData.DuckID)
+                    {
+                        PositionPacket pp = new PositionPacket(_client.GetPlayerData(nc.OwnerID), nc.GameObjectID, nc.transform.position, nc.transform.rotation);
+                        _client.SendPositionPacket(pp);
+                        nc.LastSyncedTransform = nc.transform;
+                    }
                 }
             }
         }
 
         private void PositionPacketReceived(PositionPacket packet)
         {
+            /*
             var ncs = FindObjectsByType<NetworkComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
             if (ncs == null) return; // If there aren't any networked objects then stop
@@ -58,11 +61,14 @@ namespace Networking.Core.Syncing
             {
                 if (nc.OwnerID == packet.OwnerID && nc.GameObjectID == packet.ObjectID)
                 {
-                    nc.transform.position = Vector3.Lerp(nc.transform.position, packet.Position, Time.deltaTime);
-                    nc.transform.rotation = Quaternion.Lerp(nc.transform.rotation, packet.Rotation, Time.deltaTime);
+                    Debug.Log($"ID: {packet.OwnerID}, {packet.ObjectID} | Pos: {packet.Position}");
+                    nc.LastSyncedTransform.position = packet.Position;
+                    nc.LastSyncedTransform.rotation = packet.Rotation;
+                    nc.LastSyncedTransform = nc.transform;
                     break; // We break here cuz we found the object we want so no need to continue
                 }
             }
+            */
         }
 
         public static void DestroyOverNetwork(GameObject gameObject)
@@ -82,7 +88,7 @@ namespace Networking.Core.Syncing
             {
                 if (nc.OwnerID == packet.OwnerID && nc.GameObjectID == packet.ObjectID)
                 {
-                    Destroy(nc.gameObject);
+                    nc.gameObject.SetActive(false);
                     return; // We return after destroying the object cuz our job here is done
                 }
             }

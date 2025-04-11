@@ -43,7 +43,7 @@ namespace Networking.Core.Lobby
             if (_client.SceneHost.DuckID == _client.PlayerData.DuckID) // If we are the host, then we need to spawn the players
             {
                 Debug.Log($"[DuckSpawner] Instantiating prefab {_prefabNames[player.DuckID]} at spawn point index {player.DuckID}");
-                _client.InstantiateOverNetwork(_prefabNames[player.DuckID], _spawnPoints[player.DuckID].position, _spawnPoints[player.DuckID].rotation);
+                _client.InstantiateOverNetwork(_prefabNames[player.DuckID], _spawnPoints[player.DuckID].position, _spawnPoints[player.DuckID].rotation, player);
             }
         }
     }
