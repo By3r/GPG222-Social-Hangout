@@ -127,6 +127,8 @@ namespace Networking.Core
                                     p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
                                 PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
                                 _clientsInServer[i].Send(pdlp.Serialize());
+                                SceneChangePacket hostSetPacket = new SceneChangePacket(_playersInLobby[0], -1);
+                                BroadcastToAllPlayersInLobby(hostSetPacket.Serialize(), -1);
                                 break;
 
                             case BasePacket.PacketType.ClientList:

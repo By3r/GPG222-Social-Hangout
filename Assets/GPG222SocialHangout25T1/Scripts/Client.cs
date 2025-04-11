@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
+using Networking.Core.Lobby;
 using Networking.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -144,10 +146,22 @@ namespace Networking.Core
                                 break;
                             
                             case BasePacket.PacketType.SceneChange:
+                                Debug.LogError("Scene change received");
                                 SceneChangePacket scp = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 SceneHost = scp.PlayerData;
-                                SceneManager.LoadScene(scp.SceneID);
-                                SceneIndex =  scp.SceneID;
+                                if (scp.SceneID >= 0)
+                                {
+                                    SceneManager.LoadScene(scp.SceneID);
+                                    SceneIndex =  scp.SceneID;
+                                }
+                                else
+                                {
+                                    DuckSpawner duckSpawner = FindObjectOfType<DuckSpawner>();
+                                    if (duckSpawner != null)
+                                    {
+                                        duckSpawner.SpawnPlayer(PlayerData);
+                                    }
+                                }
                                 break;
 
                             default:
@@ -180,17 +194,49 @@ namespace Networking.Core
 
         public void InstantiateFromNetwork(InstantiatePacket packet)
         {
+            string prefabName = packet.PrefabName;
+            if (prefabName.Contains("Prefabs/Ducks")) // We only want to spawn ducks not in the scene yet
+            {
+                var ncs = FindObjectsOfType<NetworkComponent>(); // All the networked GOs
+                
+                foreach (NetworkComponent nc in ncs)
+                {
+                    if (nc.gameObject.name.Contains($"{packet.PrefabName[^1]}")) // If the networked object is the prefab being spawned
+                    {
+                        return; // Then we don't want to spawn it again
+                    }
+                }
+            }
+            
             GameObject prefab = Resources.Load<GameObject>(packet.PrefabName);
             if (prefab != null)
             {
                 GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
                 NetworkComponent nc = go.GetComponent<NetworkComponent>();
                 nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
+                Debug.LogError($"[test] from network: {nc.GameObjectID}");
             }
         }
 
         public void InstantiateOverNetwork(string prefabName, Vector3 position, Quaternion rotation)
         {
+            if (prefabName.Contains("Prefabs/Ducks")) // We only want to spawn ducks not in the scene yet
+            {
+                var ncs = FindObjectsOfType<NetworkComponent>(); // All the networked GOs
+
+                foreach (NetworkComponent nc in ncs)
+                {
+                    if (nc.gameObject.name.Contains($"{prefabName[^1]}")) // If the networked object is the prefab being spawned
+                    {
+                        Core.PlayerData  playerData = PlayersInLobby.FirstOrDefault(p => p.DuckID == nc.OwnerID);
+                        InstantiatePacket ip = new InstantiatePacket(playerData, nc.GameObjectID, prefabName, position, rotation);
+                        _clientSocket.Send(ip.Serialize());
+                        Debug.LogError($"[test] {nc.GameObjectID}");
+                        return; // Then we don't want to spawn it again
+                    }
+                }
+            }
+            
             GameObject prefab = Resources.Load<GameObject>(prefabName);
             if (prefab != null)
             {

@@ -1,4 +1,5 @@
 using System;
+using Networking.Core.Lobby;
 using Networking.Packets;
 using UnityEngine;
 
@@ -32,6 +33,7 @@ namespace Networking.Core.Syncing
             _syncCounter++;
             if (_syncCounter == _syncFrequency)
             {
+                
                 var ncs = FindObjectsByType<NetworkComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None); // Get all networked GameObject in the scene
                 
                 if (ncs == null) return; // If there aren't any networked objects then stop
