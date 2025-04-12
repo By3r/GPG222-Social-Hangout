@@ -11,9 +11,7 @@ namespace Networking.Core.Pong
     public class PlayerController : MonoBehaviour
     {
         [SerializeField] private float _speed = 5f;
-        [SerializeField] private float _positionUpdateFrequency = 0.5f;
         private NetworkComponent _networkComponent;
-        private float _positionUpdateTimer;
         private Rigidbody _rb;
 
         private void FixedUpdate()

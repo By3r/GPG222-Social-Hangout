@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace Networking.Core.Pong
@@ -9,8 +10,10 @@ namespace Networking.Core.Pong
     public class PongController : MonoBehaviour
     {
         [SerializeField] private List<Transform> playerTransforms = new List<Transform>();
+        [Tooltip("Order: left, right, top, bottom")]
         [SerializeField] private List<PongGoal> goals = new List<PongGoal>();
         public Dictionary<int, int> PlayerScores = new Dictionary<int, int>();
+        [SerializeField] private TMP_Text scoreText;
 
         /* Order Of Operations
          * 1. Load the Pong minigame scene
@@ -42,6 +45,18 @@ namespace Networking.Core.Pong
             {
                 Client.Instance.InstantiateOverNetwork("Prefabs/Pong/Ball", Vector3.zero, Quaternion.identity, Client.Instance.PlayerData);
             }
+            
+            // Set up the goals as needed
+            if (Client.Instance.PlayersInLobby.Count == 2) // Only have the left and right goal
+            {
+                goals[2].enabled = false;
+                goals[3].enabled = false;
+            }
+            else if  (Client.Instance.PlayersInLobby.Count == 4)
+            {
+                goals[2].enabled = false;
+                goals[3].enabled = false;
+            }
         }
 
         /// <summary>
@@ -53,11 +68,12 @@ namespace Networking.Core.Pong
             PlayerScores[PlayerID]++;
 
             // TODO: Think about a good way to display the scores and maybe sort them by score from highest to lowest
-
+            scoreText.text = "Scores: ";
             print("Player scores:");
             foreach (var playerScore in PlayerScores)
             {
                 print($"  Player {playerScore.Key}: {playerScore.Value}");
+                scoreText.text += playerScore.Key + ": " + playerScore.Value + "\n";
             }
         }
     }

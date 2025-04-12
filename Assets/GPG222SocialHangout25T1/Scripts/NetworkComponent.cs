@@ -11,10 +11,7 @@ namespace Networking.Core
         public string GameObjectID { get; private set; }
         public int OwnerID { get; private set; }
 
-        public TMP_Text OwnerText;
-        public TMP_Text ObjectIDText;
-
-        [SerializeField] private float _packetFrequency = 2f;
+        [SerializeField] private float _packetFrequency = .2f;
         private float _packetTimer = 0f;
 
         private void OnEnable()
@@ -46,22 +43,14 @@ namespace Networking.Core
 
         private void PositionPacketReceivedEvent(PositionPacket pp)
         {
-            Debug.LogError("PP received");
+            Debug.LogError($"PP received from {pp.OwnerID} for {pp.ObjectID}");
             if (pp.OwnerID == OwnerID)
             {
                 if (GameObjectID == pp.ObjectID)
                 {
+                    Debug.LogError($"Position set for {gameObject.name}");
                     transform.position = pp.Position;
                     transform.rotation = pp.Rotation;
-                    
-                    if (OwnerText != null)
-                    {
-                        OwnerText.text = pp.Position.ToString();
-                    }
-                    if (ObjectIDText != null)
-                    {
-                        ObjectIDText.text = pp.Rotation.ToString();
-                    }
                 }
             }
         }
@@ -70,15 +59,6 @@ namespace Networking.Core
         {
             GameObjectID = objectID;
             OwnerID = ownerID;
-
-            if (OwnerText != null)
-            {
-                OwnerText.text = ownerID.ToString();
-            }
-            if (ObjectIDText != null)
-            {
-                ObjectIDText.text = objectID;
-            }
         }
     }
 }

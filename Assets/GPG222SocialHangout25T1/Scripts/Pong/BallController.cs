@@ -35,5 +35,11 @@ namespace Networking.Core.Pong
                 _rb.velocity = new Vector3(_rb.velocity.x, -_rb.velocity.y, _rb.velocity.z);
             }
         }
+
+        public void ResetBall()
+        {
+            _rb.velocity = Vector3.zero;
+            transform.position = Vector3.zero;
+        }
     }
 }

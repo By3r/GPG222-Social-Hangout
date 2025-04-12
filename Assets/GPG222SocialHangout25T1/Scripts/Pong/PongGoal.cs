@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 
 namespace Networking.Core.Pong
@@ -17,7 +18,7 @@ namespace Networking.Core.Pong
             {
                 BallController ballController = other.gameObject.GetComponent<BallController>();
                 pongController.ScoreGoal(ballController.LastPlayerContacted);
-                other.transform.position = Vector3.zero;
+                ballController.ResetBall();
             }
         }
     }

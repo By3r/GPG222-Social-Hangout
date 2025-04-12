@@ -133,7 +133,6 @@ namespace Networking.Core
 
                             case BasePacket.PacketType.Position:
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                Debug.LogError("Position received");
                                 PositionPacketReceivedEvent(pp);
                                 break;
 
@@ -260,9 +259,9 @@ namespace Networking.Core
                 GameObject go = Instantiate(prefab, position, rotation);
                 NetworkComponent nc = go.GetComponent<NetworkComponent>();
                 var objectID = System.Guid.NewGuid();
-                nc.SetObjectData(objectID.ToString(), _playerData.DuckID);
+                nc.SetObjectData(objectID.ToString(), player.DuckID);
 
-                InstantiatePacket ip = new InstantiatePacket(_playerData, objectID.ToString(), prefabName, position, rotation);
+                InstantiatePacket ip = new InstantiatePacket(player, objectID.ToString(), prefabName, position, rotation);
                 _clientSocket.Send(ip.Serialize());
             }
         }

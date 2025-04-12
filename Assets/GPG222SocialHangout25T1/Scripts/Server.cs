@@ -127,6 +127,7 @@ namespace Networking.Core
                                     p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
                                 PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
                                 _clientsInServer[i].Send(pdlp.Serialize());
+                                
                                 SceneChangePacket hostSetPacket = new SceneChangePacket(_playersInLobby[0], -1);
                                 BroadcastToAllPlayersInLobby(hostSetPacket.Serialize(), -1);
                                 break;
@@ -154,10 +155,8 @@ namespace Networking.Core
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(pp.Serialize(), i);
 
-                                _feedbackText.text += $"  Owner ID: {pp.OwnerID}\n";
-                                _feedbackText.text += $"  Position: {pp.Position}\n";
-                                _feedbackText.text += $"  Rotation: {pp.Rotation}\n";
-
+                                _feedbackText.text += $"  Owner ID: {pp.OwnerID} | Object ID: {pp.ObjectID}\n";
+                                _feedbackText.text += $"  Position: {pp.Position} | Rotation: {pp.Rotation}\n";
                                 break;
 
                             case BasePacket.PacketType.Destroy:
