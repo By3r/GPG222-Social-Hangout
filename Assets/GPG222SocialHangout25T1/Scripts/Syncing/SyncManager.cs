@@ -26,29 +26,7 @@ namespace Networking.Core.Syncing
             _client.DestroyPacketReceivedEvent -= DestroyFromNetwork;
         }
 
-        private void FixedUpdate()
-        {
-            if (_client.PlayersInLobby.Count == 1) return;
-            
-            _syncCounter++;
-            if (_syncCounter >= _syncFrequency)
-            {
-                _syncCounter = 0;
-                var ncs = FindObjectsByType<NetworkComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None); // Get all networked GameObject in the scene
-                
-                if (ncs == null) return; // If there aren't any networked objects then stop
-                
-                foreach (NetworkComponent nc in ncs) // For each object, send the position and rotation of our owned objects
-                {
-                    if (nc.OwnerID == _client.PlayerData.DuckID)
-                    {
-                        PositionPacket pp = new PositionPacket(_client.GetPlayerData(nc.OwnerID), nc.GameObjectID, nc.transform.position, nc.transform.rotation);
-                        _client.SendPositionPacket(pp);
-                        nc.LastSyncedTransform = nc.transform;
-                    }
-                }
-            }
-        }
+        
 
         private void PositionPacketReceived(PositionPacket packet)
         {

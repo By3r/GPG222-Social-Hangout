@@ -54,6 +54,9 @@ namespace Networking.Packets
             Position = new Vector3(_reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle());
             Rotation = new Quaternion(_reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle());
             Size += sizeof(float) * 7;
+
+            bufferSize -= Size;
+            offset += Size;
             
             return this;
         }

@@ -4033,7 +4033,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2116616173}
   - component: {fileID: 2116616174}
-  - component: {fileID: 2116616175}
   m_Layer: 0
   m_Name: --- Do Not Destroy ---
   m_TagString: Untagged
@@ -4071,19 +4070,6 @@ MonoBehaviour:
   _ipAddress: 127.0.0.1
   _port: 5500
   SceneIndex: 0
---- !u!114 &2116616175
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116616170}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5bfa21d121e14a00ac5e3b1e432c8955, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _syncFrequency: 50
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

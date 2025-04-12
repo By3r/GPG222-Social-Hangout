@@ -10,27 +10,37 @@ namespace Networking.Core
     {
         public string GameObjectID { get; private set; }
         public int OwnerID { get; private set; }
-        
-        public Transform LastSyncedTransform { get; set; }
 
         public TMP_Text OwnerText;
         public TMP_Text ObjectIDText;
 
-        private void Awake()
+        [SerializeField] private float _packetFrequency = 2f;
+        private float _packetTimer = 0f;
+
+        private void OnEnable()
         {
             Client.Instance.PositionPacketReceivedEvent += PositionPacketReceivedEvent;
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             Client.Instance.PositionPacketReceivedEvent -= PositionPacketReceivedEvent;
         }
 
         private void FixedUpdate()
         {
-            if (LastSyncedTransform != null)
+            if (Client.Instance.PlayersInLobby.Count > 1)
             {
-                transform.position = Vector3.Lerp(transform.position, LastSyncedTransform.position, Time.fixedDeltaTime);
+                if (OwnerID != Client.Instance.PlayerData.DuckID) return;
+                
+                _packetTimer += Time.fixedDeltaTime;
+                if (_packetTimer >= _packetFrequency)
+                {
+                    _packetTimer = 0f;
+                    
+                    PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, transform.position, transform.rotation);
+                    Client.Instance.SendPositionPacket(pp);
+                }
             }
         }
 
@@ -41,8 +51,17 @@ namespace Networking.Core
             {
                 if (GameObjectID == pp.ObjectID)
                 {
-                    LastSyncedTransform.position = pp.Position;
-                    LastSyncedTransform.rotation = pp.Rotation;
+                    transform.position = pp.Position;
+                    transform.rotation = pp.Rotation;
+                    
+                    if (OwnerText != null)
+                    {
+                        OwnerText.text = pp.Position.ToString();
+                    }
+                    if (ObjectIDText != null)
+                    {
+                        ObjectIDText.text = pp.Rotation.ToString();
+                    }
                 }
             }
         }
@@ -60,8 +79,6 @@ namespace Networking.Core
             {
                 ObjectIDText.text = objectID;
             }
-            
-            LastSyncedTransform = transform;
         }
     }
 }
