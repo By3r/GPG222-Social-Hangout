@@ -16961,6 +16961,7 @@ GameObject:
   m_Component:
   - component: {fileID: 912965009}
   - component: {fileID: 912965010}
+  - component: {fileID: 912965011}
   m_Layer: 0
   m_Name: --- Minigame Environment
   m_TagString: Untagged
@@ -17001,6 +17002,18 @@ MonoBehaviour:
   - {fileID: 1513366184}
   - {fileID: 1953002305}
   _prefabBaseName: Prefabs/Ducks
+--- !u!114 &912965011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912965008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b77b4c002e4e7c5458eba04f00823367, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &914909424
 GameObject:
   m_ObjectHideFlags: 0
@@ -34515,6 +34528,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2013014227}
   - component: {fileID: 2013014228}
+  - component: {fileID: 2013014229}
   m_Layer: 0
   m_Name: DeathCollider
   m_TagString: Untagged
@@ -34558,6 +34572,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2013014229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2013014226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47126d23fef67e64e9492a0ca32342cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2016328297
 GameObject:
   m_ObjectHideFlags: 0

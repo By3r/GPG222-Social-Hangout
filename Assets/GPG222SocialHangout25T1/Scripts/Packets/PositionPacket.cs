@@ -1,4 +1,5 @@
 using Networking.Core;
+using System.IO;
 using UnityEngine;
 
 namespace Networking.Packets
@@ -45,20 +46,46 @@ namespace Networking.Packets
         public new PositionPacket Deserialize(byte[] buffer, ref int bufferSize, ref int offset)
         {
             base.Deserialize(buffer, ref bufferSize, ref offset);
-            
+
+            // ADD THIS:
+            if (offset + sizeof(int) > buffer.Length)
+                throw new EndOfStreamException("Not enough data to read OwnerID");
+
             OwnerID = _reader.ReadInt32();
+
+            // Strings are length-prefixed, so it's tricky — safest option:
+            if (offset + sizeof(int) > buffer.Length)
+                throw new EndOfStreamException("Not enough data to read ObjectID length");
+
+            int stringLength = System.BitConverter.ToInt32(buffer, offset);
+            if (offset + sizeof(int) + stringLength > buffer.Length)
+                throw new EndOfStreamException("Not enough data to read full ObjectID");
+
             ObjectID = _reader.ReadString();
-            Size += sizeof(int);
-            Size += ObjectID.Length + 1;
-            
+
+            // Do the same kind of check for all Vector3 and Quaternion values:
+            int vector3Size = sizeof(float) * 3;
+            int quaternionSize = sizeof(float) * 4;
+
+            if (offset + vector3Size > buffer.Length)
+                throw new EndOfStreamException("Not enough data to read Position");
+
             Position = new Vector3(_reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle());
+
+            if (offset + quaternionSize > buffer.Length)
+                throw new EndOfStreamException("Not enough data to read Rotation");
+
             Rotation = new Quaternion(_reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle());
+
+            Size += sizeof(int); // for OwnerID
+            Size += System.Text.Encoding.UTF8.GetByteCount(ObjectID) + sizeof(int); // Add sizeof(int) for the string length
             Size += sizeof(float) * 7;
 
             bufferSize -= Size;
             offset += Size;
-            
+
             return this;
         }
+
     }
 }

@@ -23,7 +23,7 @@ namespace Networking.Minigames
                 _prefabNames[i] = $"{_prefabBaseName}/Duck{i}";
             }
 
-            _client.PlayerConnectedEvent += OnPlayerConnected;
+            _client.PlayerConnectedEvent += OnDuckConnected;
 
             if (_client.SceneHost.DuckID == _client.PlayerData.DuckID)
             {
@@ -34,7 +34,7 @@ namespace Networking.Minigames
             }
         }
 
-        private void OnPlayerConnected(PlayerData newPlayer)
+        private void OnDuckConnected(PlayerData newPlayer)
         {
             if (_client.SceneHost.DuckID != _client.PlayerData.DuckID) return;
 
@@ -53,7 +53,13 @@ namespace Networking.Minigames
             Vector3 position = _spawnPoints[player.DuckID].position;
             Quaternion rotation = _spawnPoints[player.DuckID].rotation;
 
-            _client.InstantiateOverNetwork(prefabName, position, rotation, player);
+            GameObject spawnedDuck = Instantiate(Resources.Load<GameObject>(prefabName), position, rotation);
+
+            NetworkComponent nc = spawnedDuck.GetComponent<NetworkComponent>();
+            var objectID = System.Guid.NewGuid().ToString();
+            nc.SetObjectData(objectID, player.DuckID);
+
+            DuckKiller.Instance.RegisterDuck(spawnedDuck);
         }
     }
 }
