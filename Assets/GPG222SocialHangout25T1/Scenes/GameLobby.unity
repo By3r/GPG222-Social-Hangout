@@ -307,8 +307,16 @@ MonoBehaviour:
   chatButton: {fileID: 641649281}
   chatBoxText: {fileID: 641649284}
   chatInput: {fileID: 641649283}
-  chatColors: []
-  colorCodes: []
+  chatColors:
+  - {r: 0.6792453, g: 0.12495552, b: 0.12495552, a: 0}
+  - {r: 0.09678713, g: 0.50468034, b: 0.7075472, a: 0}
+  - {r: 0.17501779, g: 0.5377358, b: 0.31826416, a: 0}
+  - {r: 0.622748, g: 0.20069422, b: 0.7735849, a: 0}
+  colorCodes:
+  - AE2020
+  - 1981B5
+  - 2D8A52
+  - 9F34C6
 --- !u!1 &373300596
 GameObject:
   m_ObjectHideFlags: 0
