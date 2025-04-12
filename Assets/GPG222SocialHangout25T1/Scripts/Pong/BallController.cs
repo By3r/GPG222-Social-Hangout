@@ -30,10 +30,14 @@ namespace Networking.Core.Pong
             {
                 NetworkComponent networkComponent = other.gameObject.GetComponent<NetworkComponent>();
                 LastPlayerContacted = networkComponent.OwnerID;
-
-                _rb.velocity = new Vector3(-_rb.velocity.x, _rb.velocity.y, _rb.velocity.z);
-                _rb.velocity = new Vector3(_rb.velocity.x, -_rb.velocity.y, _rb.velocity.z);
+                _rb.velocity = Vector3.Reflect(_rb.velocity, other.contacts[0].normal);
             }
+            else if  (other.gameObject.CompareTag("PongWall"))
+            {
+                _rb.velocity = Vector3.Reflect(_rb.velocity, other.contacts[0].normal);
+            }
+            
+            
         }
 
         public void ResetBall()

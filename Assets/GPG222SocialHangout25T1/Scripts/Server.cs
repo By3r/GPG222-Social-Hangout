@@ -154,9 +154,10 @@ namespace Networking.Core
                             case BasePacket.PacketType.Position:
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(pp.Serialize(), i);
-
+                                /*
                                 _feedbackText.text += $"  Owner ID: {pp.OwnerID} | Object ID: {pp.ObjectID}\n";
                                 _feedbackText.text += $"  Position: {pp.Position} | Rotation: {pp.Rotation}\n";
+                                */
                                 break;
 
                             case BasePacket.PacketType.Destroy:
@@ -178,13 +179,9 @@ namespace Networking.Core
 
                                 if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
                                 {
-                                    _feedbackText.text += "== All players are READY! ==\n";
-                                    // TODO: Hide the readiness button
-                                    // TODO: Enable minigame voting buttons (aka two for now)
-                                    _feedbackText.text += "Voting commences now!";
-
                                     // Minigamge sswitching
-                                    if (_playersInLobby.Count % 2 == 0) // If there is an even number of players, then they play the Pong minigame
+                                    if (_playersInLobby.Count == 1) return;
+                                    else if (_playersInLobby.Count == 2) // If there is an even number of players, then they play the Pong minigame
                                     {
                                         SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 2);
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
@@ -196,6 +193,7 @@ namespace Networking.Core
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
                                         _feedbackText.text += "  Going to Dana minigame";
                                     }
+                                    _feedbackText.text += "== All players are READY! ==\n";
                                 }
 
                                 #endregion

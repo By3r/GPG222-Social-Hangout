@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 1
-  _positionUpdateFrequency: 0.5
+  LastPlayerContacted: -1
 --- !u!114 &607587936520556236
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -161,3 +161,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: defd6afc32d6405a88ba49cb5bd5cb45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _packetFrequency: 0.1

@@ -26,6 +26,7 @@ namespace Networking.Core.Pong
         private void Start()
         {
             // Spawn in your own Player paddle
+            // TODO: Change location so the host is always left
             Client.Instance.InstantiateOverNetwork(
                 "Prefabs/Pong/Player",
                 playerTransforms[Client.Instance.PlayerData.DuckID].position,
@@ -44,18 +45,6 @@ namespace Networking.Core.Pong
             if (Client.Instance.SceneHost.DuckID == Client.Instance.PlayerData.DuckID)
             {
                 Client.Instance.InstantiateOverNetwork("Prefabs/Pong/Ball", Vector3.zero, Quaternion.identity, Client.Instance.PlayerData);
-            }
-            
-            // Set up the goals as needed
-            if (Client.Instance.PlayersInLobby.Count == 2) // Only have the left and right goal
-            {
-                goals[2].enabled = false;
-                goals[3].enabled = false;
-            }
-            else if  (Client.Instance.PlayersInLobby.Count == 4)
-            {
-                goals[2].enabled = false;
-                goals[3].enabled = false;
             }
         }
 
