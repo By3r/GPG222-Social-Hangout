@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Networking.Packets;
@@ -104,8 +104,40 @@ namespace Networking.Core
                                 {
                                     JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                     PlayerData newPlayer = jp.PlayerData;
+                                    List<PlayerData> currentPlayers = new List<PlayerData>(_playersInLobby);
+                                    PlayerDataListPacket pdlp = new PlayerDataListPacket(currentPlayers);
+                                    _clientsInServer[i].Send(pdlp.Serialize());
 
-                                    // Using duck id and the player's username we only add them to existing player list if they exist
+                                    foreach (var existingPlayer in currentPlayers)
+                                    {
+                                        string prefabName = $"Prefabs/Ducks/Duck{existingPlayer.DuckID}";
+                                        Vector3[] _spawnPoints = new Vector3[]
+                                        #region spawn point vector positions
+{
+    new Vector3(-4, 0, 0),
+    new Vector3(-2, 0, 0),
+    new Vector3(2, 0, 0),
+    new Vector3(4, 0, 0)
+};
+                                        #endregion
+
+                                        Vector3 position = (existingPlayer.DuckID < _spawnPoints.Length)
+                                            ? _spawnPoints[existingPlayer.DuckID]
+                                            : Vector3.zero;
+
+                                        Quaternion rotation = Quaternion.identity;
+
+
+                                        InstantiatePacket instPacket = new InstantiatePacket(
+                                            existingPlayer,
+                                            System.Guid.NewGuid().ToString(),
+                                            prefabName,
+                                            position,
+                                            rotation);
+
+                                        _clientsInServer[i].Send(instPacket.Serialize());
+                                    }
+
                                     bool alreadyInLobby = _playersInLobby.Exists(
                                         p => p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username);
 
@@ -124,27 +156,6 @@ namespace Networking.Core
                                         Debug.Log($" !!Server cs line 120!!: There is a duplicate of duck ID {newPlayer.DuckID} and username {newPlayer.Username}");
                                     }
 
-                                    List<PlayerData> clientList = _playersInLobby.FindAll(
-                                        p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
-                                    PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
-                                    _clientsInServer[i].Send(pdlp.Serialize());
-                                    #region to be deleted:  Send instantiation packet to the newly joined client
-                                    foreach (var existingPlayer in clientList)
-                                    {
-                                        string prefabName = $"Prefabs/Ducks/Duck{existingPlayer.DuckID}";
-                                        Vector3 position = Vector3.zero;
-                                        Quaternion rotation = Quaternion.identity;
-
-                                        InstantiatePacket instPacket = new InstantiatePacket(
-                                            existingPlayer,
-                                            System.Guid.NewGuid().ToString(),
-                                            prefabName,
-                                            position,
-                                            rotation);
-
-                                        _clientsInServer[i].Send(instPacket.Serialize());
-                                    }
-                                    #endregion
                                     break;
                                 }
 
@@ -165,6 +176,7 @@ namespace Networking.Core
 
                             case BasePacket.PacketType.Position:
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                _feedbackText.text += $"++++++++++++ Received position packet from Duck {pp.OwnerID} | ObjectID: {pp.ObjectID} ++++++++++++\n";
                                 BroadcastToAllPlayersInLobby(pp.Serialize(), i);
                                 break;
 

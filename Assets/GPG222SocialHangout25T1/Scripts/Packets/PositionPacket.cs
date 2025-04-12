@@ -1,4 +1,4 @@
-using Networking.Core;
+﻿using Networking.Core;
 using UnityEngine;
 
 namespace Networking.Packets
@@ -45,17 +45,21 @@ namespace Networking.Packets
         public new PositionPacket Deserialize(byte[] buffer, ref int bufferSize, ref int offset)
         {
             base.Deserialize(buffer, ref bufferSize, ref offset);
-            
+
             OwnerID = _reader.ReadInt32();
             ObjectID = _reader.ReadString();
             Size += sizeof(int);
             Size += ObjectID.Length + 1;
-            
+
             Position = new Vector3(_reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle());
             Rotation = new Quaternion(_reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle(), _reader.ReadSingle());
             Size += sizeof(float) * 7;
-            
+
+            bufferSize -= Size;
+            offset += Size;
+
             return this;
         }
+
     }
 }

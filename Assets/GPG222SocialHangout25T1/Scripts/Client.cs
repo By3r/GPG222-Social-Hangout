@@ -1,4 +1,7 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using Networking.Packets;
 using UnityEngine;
@@ -131,9 +134,18 @@ namespace Networking.Core
                                 break;
 
                             case BasePacket.PacketType.Position:
-                                PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                PositionPacketReceivedEvent(pp);
+                                try
+                                {
+                                    PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    // Debug.Log($"received Pos packet from Duck {pp.OwnerID}, object id {pp.ObjectID}");
+                                    PositionPacketReceivedEvent(pp);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Debug.LogError($"Failed to deserialize pos packet || {ex.Message}");
+                                }
                                 break;
+
 
                             case BasePacket.PacketType.Destroy:
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
@@ -155,17 +167,33 @@ namespace Networking.Core
                 }
             }
         }
+        public PlayerData GetPlayerData(int duckID)
+        {
+            PlayerData playerData = PlayersInLobby.First(p => p.DuckID == duckID);
+            return playerData;
+        }
 
         public void JoinLobby(int duckChosen, string username)
         {
             _playerData = new PlayerData(duckChosen, username);
-
             if (!_playersInLobby.Exists(p => p.Username == username && p.DuckID == duckChosen))
             {
                 _playersInLobby.Add(_playerData);
             }
-            _clientSocket.Send(new JoinPacket(_playerData).Serialize());
+
+            SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.LoadScene(1);
+        }
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            StartCoroutine(SendJoinAfterSceneLoad());
+        }
+
+        private IEnumerator SendJoinAfterSceneLoad()
+        {
+            yield return new WaitForSeconds(0.2f); // the num refers to how long it takes to send join after the scene has loaded
+            _clientSocket.Send(new JoinPacket(_playerData).Serialize());
         }
 
         public void SendChatMessage(string message)
@@ -178,14 +206,16 @@ namespace Networking.Core
         public void InstantiateFromNetwork(InstantiatePacket packet)
         {
             GameObject prefab = Resources.Load<GameObject>(packet.PrefabName);
-            if (prefab != null)
+            if (prefab == null)
             {
-                GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
-                var nc = go.GetComponent<NetworkComponent>();
-                if (nc != null)
-                {
-                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
-                }
+                return;
+            }
+
+            GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
+            var nc = go.GetComponent<NetworkComponent>();
+            if (nc != null)
+            {
+                nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
             }
         }
 
@@ -211,8 +241,12 @@ namespace Networking.Core
 
         public void SendPositionPacket(PositionPacket packet)
         {
+            if (_clientSocket == null || !_clientSocket.Connected) return;
+            if (string.IsNullOrEmpty(packet.ObjectID)) return;
+
             _clientSocket.Send(packet.Serialize());
         }
+
 
         public void SendDestroyPacket(DestroyPacket packet)
         {

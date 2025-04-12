@@ -11,37 +11,59 @@ namespace Networking.Core.Syncing
         [SerializeField] private int _syncFrequency;
         private int _syncCounter;
 
+        private bool _isReady = false;
+
         private void Start()
         {
             _client = Client.Instance;
 
+            _client.PlayerConnectedEvent += OnPlayerConnected;
             _client.PositionPacketReceivedEvent += PositionPacketReceived;
             _client.DestroyPacketReceivedEvent += DestroyFromNetwork;
         }
+
+        private void OnPlayerConnected(PlayerData player)
+        {
+            if (player.Username == _client.PlayerData.Username)
+            {
+                Debug.Log($"Player's own duck connected. Enabling sync.");
+                EnableSync();
+            }
+        }
+
+        private void EnableSync()
+        {
+            _isReady = true;
+        }
+
+        private void FixedUpdate()
+        {
+            if (!_isReady|| _client.PlayerData == null) return;
+
+            _syncCounter++;
+            if (_syncCounter >= _syncFrequency)
+            {
+                _syncCounter = 0;
+
+                var ncs = FindObjectsByType<NetworkComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+                foreach (var nc in ncs)
+                {
+                    if (nc.OwnerID == _client.PlayerData.DuckID)
+                    {
+                        PositionPacket pp = new PositionPacket(_client.PlayerData, nc.GameObjectID, nc.transform.position, nc.transform.rotation);
+                        _client.SendPositionPacket(pp);
+                        // Debug.Log($"Sent position for {nc.GameObjectID}");
+                    }
+                }
+            }
+        }
+
 
         private void OnDestroy()
         {
             _client.PositionPacketReceivedEvent -= PositionPacketReceived;
             _client.DestroyPacketReceivedEvent -= DestroyFromNetwork;
-        }
-
-        private void FixedUpdate()
-        {
-            _syncCounter++;
-            if (_syncCounter == _syncFrequency)
-            {
-                var ncs = FindObjectsByType<NetworkComponent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None); // Get all networked GameObject in the scene
-                
-                if (ncs == null) return; // If there aren't any networked objects then stop
-                
-                foreach (NetworkComponent nc in ncs) // For each object, send the position and rotation of our owned objects
-                {
-                    if (nc.OwnerID != _client.PlayerData.DuckID) continue;
-                    
-                    PositionPacket pp  = new PositionPacket(_client.PlayerData, nc.GameObjectID, nc.transform.position, nc.transform.rotation);
-                    _client.SendPositionPacket(pp);
-                }
-            }
         }
 
         private void PositionPacketReceived(PositionPacket packet)

@@ -34,33 +34,26 @@ namespace Networking.Core.Lobby
         {
             string key = $"{player.DuckID}_{player.Username}";
 
-            if (_spawnedKeys.Contains(key))
+            if (_spawnedKeys.Contains($"{player.DuckID}_{player.Username}"))
             {
-                return; // Already spawned
+                return;
             }
 
             if (!_prefabNames.ContainsKey(player.DuckID))
             {
-                Debug.LogWarning($"[DuckSpawner] Unknown DuckID {player.DuckID}");
                 return;
             }
 
             if (player.DuckID >= _spawnPoints.Count)
             {
-                Debug.LogWarning($"[DuckSpawner] No spawn point for DuckID {player.DuckID}");
                 return;
             }
 
-            Debug.Log($"[DuckSpawner] Instantiating network duck for {player.Username}");
-
+            
             if (player.Username == _client.PlayerData.Username)
             {
                 // Only the *owner* spawns their duck over the network
-                _client.InstantiateOverNetwork(
-                    _prefabNames[player.DuckID],
-                    _spawnPoints[player.DuckID].position,
-                    _spawnPoints[player.DuckID].rotation
-                );
+                _client.InstantiateOverNetwork( _prefabNames[player.DuckID], _spawnPoints[player.DuckID].position, _spawnPoints[player.DuckID].rotation);
             }
 
             _spawnedKeys.Add(key); // Mark as spawned regardless of who instantiated it
