@@ -13,10 +13,12 @@ namespace Networking.Core
 
         [SerializeField] private float _packetFrequency = .2f;
         private float _packetTimer = 0f;
+        private Transform _syncTransform;
 
         private void OnEnable()
         {
             Client.Instance.PositionPacketReceivedEvent += PositionPacketReceivedEvent;
+            _syncTransform = transform;
         }
 
         private void OnDisable()
@@ -34,9 +36,14 @@ namespace Networking.Core
                 if (_packetTimer >= _packetFrequency)
                 {
                     _packetTimer = 0f;
-                    
+                    // TODO: Small optimisation is theoretically possible by only sending position packets if we have moved a sufficient distance
                     PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, transform.position, transform.rotation);
                     Client.Instance.SendPositionPacket(pp);
+                }
+
+                if (_syncTransform != null)
+                {
+                    transform.position = Vector3.Lerp(transform.position, _syncTransform.position, Time.fixedDeltaTime * _packetFrequency);
                 }
             }
         }
@@ -49,8 +56,8 @@ namespace Networking.Core
                 if (GameObjectID == pp.ObjectID)
                 {
                     Debug.LogError($"Position set for {gameObject.name}");
-                    transform.position = pp.Position;
-                    transform.rotation = pp.Rotation;
+                    _syncTransform.position = pp.Position;
+                    _syncTransform.rotation = pp.Rotation;
                 }
             }
         }

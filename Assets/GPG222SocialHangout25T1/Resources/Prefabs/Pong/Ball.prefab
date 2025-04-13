@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 607587936520556236}
   m_Layer: 0
   m_Name: Ball
-  m_TagString: Untagged
+  m_TagString: PongBall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -94,7 +94,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 649433819896605458}
-  m_Material: {fileID: 13400000, guid: 9ecace71534d7cb46bea599c1573ed85, type: 2}
+  m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

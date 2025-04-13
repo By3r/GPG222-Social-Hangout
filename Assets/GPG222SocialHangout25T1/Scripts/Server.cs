@@ -30,6 +30,8 @@ namespace Networking.Core
         private List<PlayerData> _playersInLobby = new List<PlayerData>();
         private Socket server;
 
+        private int _feedbackLineCount = 0;
+
         private void Start()
         {
             // Spin up the server
@@ -38,7 +40,7 @@ namespace Networking.Core
             server.Listen(4);
             server.Blocking = false;
             Debug.LogError("Server Started Up!");
-            _feedbackText.text = "Server Started Up Successfully!\n";
+            Log("Server Started Up Successfully!\n");
 
             _clearButton.onClick.AddListener(ClearFeedbackText);
             _serverCountText.text = "Server Count: 0";
@@ -51,13 +53,13 @@ namespace Networking.Core
                 Socket newClient = server.Accept();
                 newClient.Blocking = false;
                 Debug.LogError("Client socket connected");
-                _feedbackText.text += "Client socket connected\n";
+                Log("Client socket connected\n");
                 // TODO: Send packet to the new client with a list of all the current clients on the server so we can check duck availability
 
                 // Add the client to the list of clients on the server if they aren't already
                 _clientsInServer.Add(newClient);
-                // _feedbackText.text += $"Client with socket {newClient} has been added to the list of clients in the server\n";
-                _feedbackText.text += $"Clients connected to server: {+_clientsInServer.Count}\n";
+                // Log($"Client with socket {newClient} has been added to the list of clients in the server\n";
+                Log($"Clients connected to server: {+_clientsInServer.Count}\n");
                 _serverCountText.text = $"Server Count: {_clientsInServer.Count}\n";
             }
             catch (SocketException e) // Otherwise print out the error Message
@@ -78,7 +80,7 @@ namespace Networking.Core
                 Socket client = _clientsInServer[i];
                 if (client.Available > 0) // If the client has a packet we check to see if it should be broadcast
                 {
-                    _feedbackText.text += "=====\n";
+                    Log("=====\n");
                     // Get the packets in the client's buffer
                     byte[] buffer = new byte[client.Available];
                     client.Receive(buffer); // Actually get the stuff in the client's buffer
@@ -94,7 +96,7 @@ namespace Networking.Core
 
                     while (bufferSize > 0)
                     {
-                        _feedbackText.text += $"Packet type: {bp.Type} | Size: {bp.Size} | Offset: {offset}\n";
+                        Log($"Packet type: {bp.Type} | Size: {bp.Size} | Offset: {offset}\n");
 
                         switch (bp.Type)
                         {
@@ -146,8 +148,8 @@ namespace Networking.Core
                                     new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(ip.Serialize(), i);
 
-                                _feedbackText.text += $"  Prefab Name: {ip.PrefabName}\n";
-                                _feedbackText.text += $"  Owner ID: {ip.PlayerData.DuckID}\n";
+                                Log($"  Prefab Name: {ip.PrefabName}\n");
+                                Log($"  Owner ID: {ip.PlayerData.DuckID}\n");
 
                                 break;
 
@@ -155,8 +157,8 @@ namespace Networking.Core
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(pp.Serialize(), i);
                                 /*
-                                _feedbackText.text += $"  Owner ID: {pp.OwnerID} | Object ID: {pp.ObjectID}\n";
-                                _feedbackText.text += $"  Position: {pp.Position} | Rotation: {pp.Rotation}\n";
+                                Log($"  Owner ID: {pp.OwnerID} | Object ID: {pp.ObjectID}\n";
+                                Log($"  Position: {pp.Position} | Rotation: {pp.Rotation}\n";
                                 */
                                 break;
 
@@ -164,8 +166,8 @@ namespace Networking.Core
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(dp.Serialize(), i);
 
-                                _feedbackText.text += $"  Owner ID: {dp.PlayerData.DuckID}\n";
-                                _feedbackText.text += $"  Position: {dp.ObjectID}\n";
+                                Log($"  Owner ID: {dp.PlayerData.DuckID}\n");
+                                Log($"  Position: {dp.ObjectID}\n");
 
                                 break;
 
@@ -173,7 +175,7 @@ namespace Networking.Core
                                 ReadinessPacket readyPacket = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 _playerReadyStatus[readyPacket.PlayerData.DuckID] = readyPacket.IsReady;
 
-                                _feedbackText.text += $"  {readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n";
+                                Log($"  {readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n");
 
                                 #region Checks if all players are ready
 
@@ -185,15 +187,15 @@ namespace Networking.Core
                                     {
                                         SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 2);
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
-                                        _feedbackText.text += "  Going to Pong minigame";
+                                        Log("  Going to Pong minigame");
                                     }
                                     else // Otherwise if there is an odd number of players they play Dana's minigame
                                     {
                                         SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 3);
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
-                                        _feedbackText.text += "  Going to Dana minigame";
+                                        Log("  Going to Dana minigame");
                                     }
-                                    _feedbackText.text += "== All players are READY! ==\n";
+                                    Log("== All players are READY! ==\n");
                                 }
 
                                 #endregion
@@ -243,6 +245,18 @@ namespace Networking.Core
                     _clientsInServer[i].Send(buffer);
                 }
             }
+        }
+
+        private void Log(string message)
+        {
+            if (_feedbackLineCount >= 25)
+            {
+                _feedbackText.text = "";
+                _feedbackLineCount = 0;
+            }
+            
+            _feedbackLineCount++;
+            _feedbackText.text += message;
         }
 
         private void ClearFeedbackText()
