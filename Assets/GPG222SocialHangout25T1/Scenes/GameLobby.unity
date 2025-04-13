@@ -737,22 +737,22 @@ PrefabInstance:
     - target: {fileID: 4751579037258303738, guid: 2f0b063641a5b3c42a5fbd747a77df63, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 233958511}
     - target: {fileID: 4751579037258303738, guid: 2f0b063641a5b3c42a5fbd747a77df63, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4751579037258303738, guid: 2f0b063641a5b3c42a5fbd747a77df63, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnChatButtonClicked
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 4751579037258303738, guid: 2f0b063641a5b3c42a5fbd747a77df63, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: Networking.UI.ChatManager, Assembly-CSharp
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 4751579037258303738, guid: 2f0b063641a5b3c42a5fbd747a77df63, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6299868403434933384, guid: 2f0b063641a5b3c42a5fbd747a77df63, type: 3}
       propertyPath: m_Name

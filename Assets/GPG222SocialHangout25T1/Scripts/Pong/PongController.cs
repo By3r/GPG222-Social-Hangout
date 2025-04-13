@@ -26,11 +26,24 @@ namespace Networking.Core.Pong
         private void Start()
         {
             // Spawn in your own Player paddle
-            Client.Instance.InstantiateOverNetwork(
-                "Prefabs/Pong/Player",
-                playerTransforms[Client.Instance.PlayerData.DuckID].position,
-                playerTransforms[Client.Instance.PlayerData.DuckID].rotation,
-                Client.Instance.PlayerData);
+            if (Client.Instance.PlayerData.DuckID == Client.Instance.SceneHost.DuckID)
+            {
+                Client.Instance.InstantiateOverNetwork(
+                    "Prefabs/Pong/Player",
+                    playerTransforms[0].position,
+                    playerTransforms[0].rotation,
+                    Client.Instance.PlayerData);
+            }
+            else
+            {
+                Client.Instance.InstantiateOverNetwork(
+                    "Prefabs/Pong/Player",
+                    playerTransforms[1].position,
+                    playerTransforms[1].rotation,
+                    Client.Instance.PlayerData);
+            }
+            
+            
 
             // TODO: Freeze position on the player object based on where they spawned (only move along one axis, but top and bottom are rotated)
 
@@ -45,18 +58,6 @@ namespace Networking.Core.Pong
             {
                 Client.Instance.InstantiateOverNetwork("Prefabs/Pong/Ball", Vector3.zero, Quaternion.identity, Client.Instance.PlayerData);
             }
-            
-            // Set up the goals as needed
-            if (Client.Instance.PlayersInLobby.Count == 2) // Only have the left and right goal
-            {
-                goals[2].enabled = false;
-                goals[3].enabled = false;
-            }
-            else if  (Client.Instance.PlayersInLobby.Count == 4)
-            {
-                goals[2].enabled = false;
-                goals[3].enabled = false;
-            }
         }
 
         /// <summary>
@@ -65,6 +66,7 @@ namespace Networking.Core.Pong
         /// <param name="PlayerID">The DuckID of the player that scored</param>
         public void ScoreGoal(int PlayerID)
         {
+            Debug.Log("Score Goal: " + PlayerID);
             PlayerScores[PlayerID]++;
 
             // TODO: Think about a good way to display the scores and maybe sort them by score from highest to lowest
