@@ -144,7 +144,7 @@ namespace Networking.Core
                                 ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 PlayerReadinessChangedEvent?.Invoke(rp.PlayerData, rp.IsReady);
                                 break;
-                            
+
                             case BasePacket.PacketType.SceneChange:
                                 Debug.LogError("Scene change received");
                                 SceneChangePacket scp = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
@@ -152,7 +152,7 @@ namespace Networking.Core
                                 if (scp.SceneID >= 0)
                                 {
                                     SceneManager.LoadScene(scp.SceneID);
-                                    SceneIndex =  scp.SceneID;
+                                    SceneIndex = scp.SceneID;
                                 }
                                 else
                                 {
@@ -203,22 +203,28 @@ namespace Networking.Core
             string prefabName = packet.PrefabName;
             if (prefabName.Contains("Prefabs/Ducks")) // We only want to spawn ducks not in the scene yet
             {
-                var ncs = FindObjectsOfType<NetworkComponent>(); // All the networked GOs
-                
+                var ncs = FindObjectsOfType<NetworkComponent>();
+
                 foreach (NetworkComponent nc in ncs)
                 {
-                    if (nc.gameObject.name.Contains($"{packet.PrefabName[^1]}")) // If the networked object is the prefab being spawned
+                    if (nc.gameObject.name.Contains($"{packet.PrefabName[^1]}"))
                     {
-                        return; // Then we don't want to spawn it again
+                        return;
                     }
                 }
-                
-                GameObject prefab = Resources.Load<GameObject>(packet.PrefabName);
+
+                GameObject prefab = Resources.Load<GameObject>(prefabName);
                 if (prefab != null)
                 {
                     GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
                     NetworkComponent nc = go.GetComponent<NetworkComponent>();
-                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
+                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID, packet.PlayerData.Username);
+
+                    if (SceneManager.GetActiveScene().name.Contains("Minigame") && DuckKiller.Instance != null)
+                    {
+                        DuckKiller.Instance.RegisterDuck(go);
+                    }
+
                     return;
                 }
             }
@@ -230,8 +236,8 @@ namespace Networking.Core
                 {
                     GameObject go = Instantiate(prefab, packet.Position, packet.Rotation);
                     NetworkComponent nc = go.GetComponent<NetworkComponent>();
-                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID);
-                    Debug.LogError($"[test] from network: {nc.GameObjectID}");
+
+                    nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID, packet.PlayerData.Username);
                 }
             }
         }
@@ -252,7 +258,7 @@ namespace Networking.Core
                     }
                 }
             }
-            
+
             GameObject prefab = Resources.Load<GameObject>(prefabName);
             if (prefab != null)
             {

@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using Networking.Core; // 👈 Needed for NetworkComponent reference
 
 public class DuckKiller : MonoBehaviour
 {
     public static DuckKiller Instance;
 
     private List<GameObject> _allducks = new List<GameObject>();
+    [SerializeField] private TMP_Text winnerText;
 
     private void Awake()
     {
@@ -33,8 +36,14 @@ public class DuckKiller : MonoBehaviour
 
         if (aliveCount == 1)
         {
-            Debug.Log($" COngrats {lastAlive.name} !!!");
-            // TODO: Trigger win UI
+            string winnerUsername = lastAlive.name;
+
+            NetworkComponent netComp = lastAlive.GetComponent<NetworkComponent>();
+            if (netComp != null && !string.IsNullOrEmpty(netComp.Username))
+            {
+                winnerUsername = netComp.Username;
+            }
+            winnerText.text = $"Winner: {winnerUsername}";
         }
     }
 }

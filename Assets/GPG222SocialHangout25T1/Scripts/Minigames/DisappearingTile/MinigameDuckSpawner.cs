@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Networking.Core;
-using Networking.Packets;
 
 namespace Networking.Minigames
 {
@@ -53,13 +52,7 @@ namespace Networking.Minigames
             Vector3 position = _spawnPoints[player.DuckID].position;
             Quaternion rotation = _spawnPoints[player.DuckID].rotation;
 
-            GameObject spawnedDuck = Instantiate(Resources.Load<GameObject>(prefabName), position, rotation);
-
-            NetworkComponent nc = spawnedDuck.GetComponent<NetworkComponent>();
-            var objectID = System.Guid.NewGuid().ToString();
-            nc.SetObjectData(objectID, player.DuckID);
-
-            DuckKiller.Instance.RegisterDuck(spawnedDuck);
+            _client.InstantiateOverNetwork(prefabName, position, rotation, player);
         }
     }
 }

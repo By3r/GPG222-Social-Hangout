@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Networking.Core.Syncing;
 using Networking.Packets;
 using TMPro;
@@ -11,9 +11,16 @@ namespace Networking.Core
         public string GameObjectID { get; private set; }
         public int OwnerID { get; private set; }
 
+        public string Username { get; private set; }
+
         [SerializeField] private float _packetFrequency = .2f;
         private float _packetTimer = 0f;
         private Transform _syncTransform;
+
+        private Vector3 _lastSentPosition;
+        private Quaternion _lastSentRotation;
+        [SerializeField] private float _movementThreshold = 0.01f;
+        [SerializeField] private float _rotationThreshold = 0.5f; // degrees
 
         private void OnEnable()
         {
@@ -31,19 +38,35 @@ namespace Networking.Core
             if (Client.Instance.PlayersInLobby.Count > 1)
             {
                 if (OwnerID != Client.Instance.PlayerData.DuckID) return;
-                
+
                 _packetTimer += Time.fixedDeltaTime;
                 if (_packetTimer >= _packetFrequency)
                 {
                     _packetTimer = 0f;
-                    // TODO: Small optimisation is theoretically possible by only sending position packets if we have moved a sufficient distance
-                    PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, transform.position, transform.rotation);
-                    Client.Instance.SendPositionPacket(pp);
+
+                    Vector3 positionDelta = transform.position - _lastSentPosition;
+                    float rotationDelta = Quaternion.Angle(transform.rotation, _lastSentRotation);
+
+                    if (positionDelta.sqrMagnitude > _movementThreshold * _movementThreshold ||
+                        rotationDelta > _rotationThreshold)
+                    {
+                        PositionPacket pp = new PositionPacket(
+                            Client.Instance.GetPlayerData(OwnerID),
+                            GameObjectID,
+                            transform.position,
+                            transform.rotation
+                        );
+                        Client.Instance.SendPositionPacket(pp);
+
+                        _lastSentPosition = transform.position;
+                        _lastSentRotation = transform.rotation;
+                    }
                 }
 
                 if (_syncTransform != null)
                 {
-                    transform.position = Vector3.Lerp(transform.position, _syncTransform.position, Time.fixedDeltaTime * _packetFrequency);
+                    transform.position = Vector3.Lerp(transform.position, _syncTransform.position, Time.fixedDeltaTime / _packetFrequency);
+                    transform.rotation = Quaternion.Lerp(transform.rotation, _syncTransform.rotation, Time.fixedDeltaTime / _packetFrequency);
                 }
             }
         }
@@ -62,10 +85,12 @@ namespace Networking.Core
             }
         }
 
-        public void SetObjectData(string objectID, int ownerID)
+        public void SetObjectData(string objectID, int ownerID, string username = null)
         {
             GameObjectID = objectID;
             OwnerID = ownerID;
+            Username = username;
         }
+
     }
 }

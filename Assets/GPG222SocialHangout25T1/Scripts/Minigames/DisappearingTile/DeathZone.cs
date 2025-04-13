@@ -4,12 +4,17 @@ using UnityEngine;
 
 public class DeathZone : MonoBehaviour
 {
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("Duck"))
-        {
-            collision.gameObject.SetActive(false);
-            DuckKiller.Instance.CheckForWinner();
-        }
+        TryKillDuck(other.gameObject);
+    }
+
+    private void TryKillDuck(GameObject obj)
+    {
+        GameObject duck = obj.transform.root.gameObject;
+        Debug.Log($"[DeathZone] Duck hit: {duck.name}");
+
+        duck.SetActive(false);
+        DuckKiller.Instance?.CheckForWinner();
     }
 }

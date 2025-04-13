@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Networking.Packets;
@@ -181,22 +181,17 @@ namespace Networking.Core
 
                                 if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
                                 {
-                                    // Minigamge sswitching
-                                    if (_playersInLobby.Count == 1) return;
-                                    else if (_playersInLobby.Count == 2) // If there is an even number of players, then they play the Pong minigame
-                                    {
-                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 2);
-                                        BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
-                                        Log("  Going to Pong minigame");
-                                    }
-                                    else // Otherwise if there is an odd number of players they play Dana's minigame
-                                    {
-                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 3);
-                                        BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
-                                        Log("  Going to Dana minigame");
-                                    }
+                                    if (_playersInLobby.Count < 2) return;
+
+                                    int chosenScene = 3;
+                                    Log($"[TEST MODE] All players ready — loading Scene {chosenScene}");
+
+                                    SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], chosenScene);
+                                    BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
+
                                     Log("== All players are READY! ==\n");
                                 }
+
 
                                 #endregion
 
