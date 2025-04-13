@@ -3,7 +3,7 @@ using UnityEngine;
 public class TileDisabler : MonoBehaviour
 {
     #region Variables
-    [SerializeField] private float tileDisablingDelay = 3f;
+    [SerializeField] private float tileDisablingDelay = 1f;
     private bool _isTriggered = false;
     #endregion
 

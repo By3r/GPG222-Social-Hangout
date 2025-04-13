@@ -6,12 +6,14 @@ namespace Networking.Minigames
 {
     public class MinigameDuckSpawner : MonoBehaviour
     {
+        #region Variables
         private Client _client;
 
         [SerializeField] private List<Transform> _spawnPoints = new List<Transform>();
         [SerializeField] private string _prefabBaseName = "Prefabs/Ducks";
 
         private Dictionary<int, string> _prefabNames = new Dictionary<int, string>();
+        #endregion
 
         private void Start()
         {
@@ -33,6 +35,7 @@ namespace Networking.Minigames
             }
         }
 
+        #region Private Functions
         private void OnDuckConnected(PlayerData newPlayer)
         {
             if (_client.SceneHost.DuckID != _client.PlayerData.DuckID) return;
@@ -54,5 +57,6 @@ namespace Networking.Minigames
 
             _client.InstantiateOverNetwork(prefabName, position, rotation, player);
         }
+        #endregion
     }
 }

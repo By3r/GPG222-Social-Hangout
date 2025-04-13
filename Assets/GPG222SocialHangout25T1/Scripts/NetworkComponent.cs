@@ -8,6 +8,7 @@ namespace Networking.Core
 {
     public class NetworkComponent : MonoBehaviour
     {
+        #region Variables
         public string GameObjectID { get; private set; }
         public int OwnerID { get; private set; }
 
@@ -17,10 +18,13 @@ namespace Networking.Core
         private float _packetTimer = 0f;
         private Transform _syncTransform;
 
-        private Vector3 _lastSentPosition;
-        private Quaternion _lastSentRotation;
         [SerializeField] private float _movementThreshold = 0.01f;
         [SerializeField] private float _rotationThreshold = 0.5f; // degrees
+
+        private Vector3 _lastSentPosition;
+        private Quaternion _lastSentRotation;
+
+        #endregion
 
         private void OnEnable()
         {

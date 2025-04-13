@@ -10,18 +10,26 @@ namespace Networking.Core
 {
     public class Client : NetworkEvents
     {
+        #region Variables
         [SerializeField] private string _ipAddress = "127.0.0.1";
         [SerializeField] private int _port = 5500;
         private Socket _clientSocket;
 
+        [Tooltip("Player information")]
         private PlayerData _playerData;
-        private List<PlayerData> _playersInLobby = new List<PlayerData>();
-        public PlayerData SceneHost;
-        public int SceneIndex = 0;
-        public List<PlayerData> PlayersInLobby { get { return _playersInLobby; } }
         public PlayerData PlayerData { get { return _playerData; } }
 
+        [Tooltip("Track players in lobby/ connected players")]
+        private List<PlayerData> _playersInLobby = new List<PlayerData>();
+        public List<PlayerData> PlayersInLobby { get { return _playersInLobby; } }
+
+        [Tooltip("'Owner of the lobby'")]
+        public PlayerData SceneHost;
+
+        public int SceneIndex = 0;
+
         public static Client Instance;
+        #endregion
 
         private void Awake()
         {
@@ -35,13 +43,6 @@ namespace Networking.Core
             {
                 Destroy(this);
             }
-
-            ServerConnectEvent += ServerConnectEvent;
-        }
-
-        private void OnDestroy()
-        {
-            ServerConnectEvent -= ServerConnectEvent;
         }
 
         private void Start()
@@ -57,15 +58,6 @@ namespace Networking.Core
                     Debug.LogError(e.ToString());
                 }
             }
-        }
-
-        public void ConnectToServer(string ipAddress, int duckChosen, string playerName)
-        {
-            _ipAddress = ipAddress;
-            _clientSocket.Connect(_ipAddress, _port);
-            _clientSocket.Blocking = false;
-            Debug.LogError("Client socket connected");
-            JoinLobby(duckChosen, playerName);
         }
 
         private void Update()
@@ -86,6 +78,8 @@ namespace Networking.Core
                         // Deserialize the base of the packet to expose its packet type
                         BasePacket basePacket = new BasePacket();
                         basePacket.Deserialize(buffer, ref bufferSize, ref offset);
+
+                        #region Packet Switch cases
                         switch (basePacket.Type)
                         {
                             case BasePacket.PacketType.None:
@@ -93,80 +87,98 @@ namespace Networking.Core
                                 break;
 
                             case BasePacket.PacketType.Join:
-                                JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                bool isInLobby = _playersInLobby.Exists(p => p.Username == jp.PlayerData.Username && p.DuckID == jp.PlayerData.DuckID); // -delete later- determined by checking the user and duck id to confirm presence in lobby. ///
-                                if (!isInLobby)
                                 {
-                                    _playersInLobby.Add(jp.PlayerData);
-                                    PlayerConnectedEvent?.Invoke(jp.PlayerData);
+                                    JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    bool isInLobby = _playersInLobby.Exists(p => p.Username == jp.PlayerData.Username && p.DuckID == jp.PlayerData.DuckID);
+                                    if (!isInLobby)
+                                    {
+                                        _playersInLobby.Add(jp.PlayerData);
+                                        PlayerConnectedEvent?.Invoke(jp.PlayerData);
+                                    }
+                                    break;
                                 }
-                                break;
 
                             case BasePacket.PacketType.ClientList:
-                                // TODO: Add a client list packet to send a list of PlayerData for all the clients in the lobby or server
-                                Debug.LogError("Client list received");
-                                PlayerDataListPacket pdlp = new PlayerDataListPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                foreach (PlayerData pd in pdlp.Players)
                                 {
-                                    // Don't include our data (current player data)
-                                    if (pd.Username == _playerData.Username)
-                                        continue;
-                                    bool exists = _playersInLobby.Exists(
-                                        p => p.Username == pd.Username && p.DuckID == pd.DuckID);
-                                    if (!exists)
+                                    Debug.LogError("Client list received");
+                                    PlayerDataListPacket pdlp = new PlayerDataListPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    foreach (PlayerData pd in pdlp.Players)
                                     {
-                                        _playersInLobby.Add(pd);
-                                        PlayerConnectedEvent?.Invoke(pd);
+                                        // Don't include our data (current player data)
+                                        if (pd.Username == _playerData.Username)
+                                            continue;
+
+                                        bool exists = _playersInLobby.Exists( p => p.Username == pd.Username && p.DuckID == pd.DuckID);
+
+                                        if (!exists)
+                                        {
+                                            _playersInLobby.Add(pd);
+                                            PlayerConnectedEvent?.Invoke(pd);
+                                        }
                                     }
+                                    break;
                                 }
-                                break;
 
                             case BasePacket.PacketType.Message:
-                                MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                ChatMessageReceivedEvent(mp.PlayerData, mp.Message);
-                                break;
+                                {
+                                    MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    ChatMessageReceivedEvent(mp.PlayerData, mp.Message);
+                                    break;
+                                }
 
                             case BasePacket.PacketType.Instantiate:
-                                InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                InstantiateFromNetwork(ip);
-                                break;
+                                {
+                                    InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    InstantiateFromNetwork(ip);
+                                    break;
+                                }
 
                             case BasePacket.PacketType.Position:
-                                PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                PositionPacketReceivedEvent(pp);
-                                break;
+                                {
+                                    PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    PositionPacketReceivedEvent(pp);
+                                    break;
+                                }
 
                             case BasePacket.PacketType.Destroy:
-                                DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                DestroyPacketReceivedEvent(dp);
-                                break;
+                                {
+                                    DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    DestroyPacketReceivedEvent(dp);
+                                    break;
+                                }
+
                             case BasePacket.PacketType.ReadyStatus:
-                                ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                PlayerReadinessChangedEvent?.Invoke(rp.PlayerData, rp.IsReady);
-                                break;
+                                {
+                                    ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    PlayerReadinessChangedEvent?.Invoke(rp.PlayerData, rp.IsReady);
+                                    break;
+                                }
 
                             case BasePacket.PacketType.SceneChange:
-                                Debug.LogError("Scene change received");
-                                SceneChangePacket scp = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
-                                SceneHost = scp.PlayerData;
-                                if (scp.SceneID >= 0)
                                 {
-                                    SceneManager.LoadScene(scp.SceneID);
-                                    SceneIndex = scp.SceneID;
-                                }
-                                else
-                                {
-                                    DuckSpawner duckSpawner = FindObjectOfType<DuckSpawner>();
-                                    if (duckSpawner != null)
+                                    Debug.LogError("Scene change received");
+                                    SceneChangePacket scp = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                                    SceneHost = scp.PlayerData;
+                                    if (scp.SceneID >= 0)
                                     {
-                                        duckSpawner.SpawnPlayer(PlayerData);
+                                        SceneManager.LoadScene(scp.SceneID);
+                                        SceneIndex = scp.SceneID;
                                     }
+                                    else
+                                    {
+                                        DuckSpawner duckSpawner = FindObjectOfType<DuckSpawner>();
+                                        if (duckSpawner != null)
+                                        {
+                                            duckSpawner.SpawnPlayer(PlayerData);
+                                        }
+                                    }
+                                    break;
                                 }
-                                break;
 
                             default:
                                 break;
                         }
+                        #endregion
                     }
                 }
                 catch (SocketException e)
@@ -176,12 +188,25 @@ namespace Networking.Core
             }
         }
 
+
+        #region Public Functions
+        public void ConnectToServer(string ipAddress, int duckChosen, string playerName)
+        {
+            _ipAddress = ipAddress;
+            _clientSocket.Connect(_ipAddress, _port);
+            _clientSocket.Blocking = false;
+            Debug.LogError("Client socket connected");
+            JoinLobby(duckChosen, playerName);
+        }
+
+        #region Packets helper functions
         public PlayerData GetPlayerData(int duckID)
         {
             PlayerData playerData = PlayersInLobby.First(p => p.DuckID == duckID);
             return playerData;
         }
 
+        #region Join
         public void JoinLobby(int duckChosen, string username)
         {
             _playerData = new PlayerData(duckChosen, username);
@@ -190,14 +215,18 @@ namespace Networking.Core
             SceneManager.LoadScene(1, LoadSceneMode.Single);
             SceneIndex = 1;
         }
+        #endregion
 
+        #region Chat 
         public void SendChatMessage(string message)
         {
             byte[] buffer = new MessagePacket(PlayerData, message).Serialize();
             ChatMessageSentEvent(PlayerData, message);
             _clientSocket.Send(buffer);
         }
+        #endregion
 
+        #region Instantiation Logic
         public void InstantiateFromNetwork(InstantiatePacket packet)
         {
             string prefabName = packet.PrefabName;
@@ -220,7 +249,7 @@ namespace Networking.Core
                     NetworkComponent nc = go.GetComponent<NetworkComponent>();
                     nc.SetObjectData(packet.ObjectID, packet.PlayerData.DuckID, packet.PlayerData.Username);
 
-                    if (SceneManager.GetActiveScene().name.Contains("Minigame") && DuckKiller.Instance != null)
+                    if (SceneManager.GetActiveScene().name.Contains("Minigame_DisappearingTileFloor") && DuckKiller.Instance != null)
                     {
                         DuckKiller.Instance.RegisterDuck(go);
                     }
@@ -271,21 +300,31 @@ namespace Networking.Core
                 _clientSocket.Send(ip.Serialize());
             }
         }
+        #endregion
 
+        #region Position 
         public void SendPositionPacket(PositionPacket packet)
         {
             _clientSocket.Send(packet.Serialize());
         }
+        #endregion
 
+        #region Destroy
         public void SendDestroyPacket(DestroyPacket packet)
         {
             _clientSocket.Send(packet.Serialize());
         }
+        #endregion
 
+        #region Ready Status
         public void SendReadyStatus(bool isReady)
         {
             var readyPacket = new ReadinessPacket(_playerData, isReady);
             _clientSocket.Send(readyPacket.Serialize());
         }
+        #endregion
+
+        #endregion
+        #endregion
     }
 }
