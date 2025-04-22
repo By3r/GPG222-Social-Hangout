@@ -140,6 +140,7 @@ namespace Networking.Core
                                 DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 DestroyPacketReceivedEvent(dp);
                                 break;
+                            
                             case BasePacket.PacketType.ReadyStatus:
                                 ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 PlayerReadinessChangedEvent?.Invoke(rp.PlayerData, rp.IsReady);

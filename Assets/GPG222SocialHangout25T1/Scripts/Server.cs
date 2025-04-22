@@ -125,11 +125,13 @@ namespace Networking.Core
                                     Debug.Log($" !!Server cs line 120!!: There is a duplicate of duck ID {newPlayer.DuckID} and username {newPlayer.Username}");
                                 }
 
+                                // Send the list of clients
                                 var clientList = _playersInLobby.FindAll(
                                     p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
                                 PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
                                 _clientsInServer[i].Send(pdlp.Serialize());
                                 
+                                // Send the scene change packet to set host and spawn ducks
                                 SceneChangePacket hostSetPacket = new SceneChangePacket(_playersInLobby[0], -1);
                                 BroadcastToAllPlayersInLobby(hostSetPacket.Serialize(), -1);
                                 break;
@@ -156,10 +158,6 @@ namespace Networking.Core
                             case BasePacket.PacketType.Position:
                                 PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 BroadcastToAllPlayersInLobby(pp.Serialize(), i);
-                                /*
-                                Log($"  Owner ID: {pp.OwnerID} | Object ID: {pp.ObjectID}\n";
-                                Log($"  Position: {pp.Position} | Rotation: {pp.Rotation}\n";
-                                */
                                 break;
 
                             case BasePacket.PacketType.Destroy:
