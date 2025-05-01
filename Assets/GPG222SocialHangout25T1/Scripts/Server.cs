@@ -16,10 +16,12 @@ namespace Networking.Core
         #region Variables
         [Header("Server Connection info")]
         [SerializeField] private string _ipAddress = "127.0.0.1";
+
         [SerializeField] private int _port = 5500;
 
         [Header("Debug Info")]
         [SerializeField] private TMP_Text _feedbackText;
+
         [SerializeField] private TMP_Text _serverCountText;
         [SerializeField] private Button _clearButton;
 
@@ -37,11 +39,10 @@ namespace Networking.Core
 
         private Dictionary<Socket, byte[]> _receiveBuffers = new Dictionary<Socket, byte[]>();
         private Dictionary<Socket, int> _bufferCounts = new Dictionary<Socket, int>();
-        private Dictionary<Socket, DateTime> _lastHeartbeatTimes = new();
-        private Dictionary<Socket, PlayerData> _socketToPlayer = new(); // this maps each client to their playerdata //
 
+        private Dictionary<Socket, DateTime> _lastHeartbeatTimes = new Dictionary<Socket, DateTime>();
+        private Dictionary<Socket, PlayerData> _socketToPlayer = new Dictionary<Socket, PlayerData>(); // this maps each client to their playerdata //
         private readonly TimeSpan HeartbeatTimeout = TimeSpan.FromSeconds(5);
-
         #endregion
 
         private void Start()
@@ -60,27 +61,19 @@ namespace Networking.Core
 
         private void Update()
         {
-            #region new heartbeat integration
             DateTime now = DateTime.UtcNow;
-            List<Socket> toRemove = new List<Socket>();
-
+            var toRemove = new List<Socket>();
             foreach (var kvp in _lastHeartbeatTimes)
-            {
                 if ((now - kvp.Value) > HeartbeatTimeout)
-                {
                     toRemove.Add(kvp.Key);
-                }
-            }
 
-            foreach (Socket deadClient in toRemove)
+            foreach (var dead in toRemove)
             {
-                Log($"<color=red>💀 No heartbeat from {(_socketToPlayer.ContainsKey(deadClient) ? _socketToPlayer[deadClient].Username : "Unknown")} — Disconnecting.</color>\n");
-                DisconnectClient(deadClient);
+                Log($"<color=red>No heartbeat from " + $"{(_socketToPlayer.TryGetValue(dead, out var pd) ? pd.Username : "Unknown")} " + $"— Disconnecting.</color>\n");
+                DisconnectClient(dead);
             }
-            #endregion
 
-            // Accept new clients
-            try
+            try // Try to have a client connect
             {
                 Socket newClient = server.Accept();
                 newClient.Blocking = false;
@@ -103,6 +96,9 @@ namespace Networking.Core
                 }
             }
 
+            if (_clientsInServer.Count == 0) return;
+
+
             for (int i = 0; i < _clientsInServer.Count; i++)
             {
                 Socket client = _clientsInServer[i];
@@ -116,6 +112,8 @@ namespace Networking.Core
 
                         int bytesReceived = client.Receive(buffer, bufferCount, buffer.Length - bufferCount, SocketFlags.None);
                         bufferCount += bytesReceived;
+
+
 
                         while (bufferCount >= 4)
                         {
@@ -142,7 +140,22 @@ namespace Networking.Core
                     catch (SocketException e)
                     {
                         Debug.LogError(e.ToString());
+
+                        if (e.SocketErrorCode == SocketError.ConnectionReset || e.SocketErrorCode == SocketError.Shutdown || e.SocketErrorCode == SocketError.ConnectionAborted)
+                        {
+                            var who = _socketToPlayer.TryGetValue(client, out var pd)
+                                ? pd.Username
+                                : "Unknown";
+                            Log($"<color=red>Connection lost from {who} — disconnecting.</color>\n");
+                            DisconnectClient(client);
+                            i--;
+                        }
+                        else
+                        {
+                            Debug.LogError(e.ToString());
+                        }
                     }
+
                 }
             }
         }
@@ -164,154 +177,115 @@ namespace Networking.Core
         #region Private Functions
         private void ProcessPacket(byte[] buffer, Socket client, int clientIndex)
         {
-            PacketType type = (PacketType)BitConverter.ToInt32(buffer, 0);
+            PacketType peek = (PacketType)BitConverter.ToInt32(buffer, 0);
 
-            if (type == PacketType.Heartbeat)
+            if (peek == PacketType.Heartbeat)
             {
                 _lastHeartbeatTimes[client] = DateTime.UtcNow;
-                if (_socketToPlayer.TryGetValue(client, out var s))
-                    Log($"<color=green>Heartbeat from {s.Username}</color>\n");
-                else
-                    Log("<color=yellow>Heartbeat  an unknown client</color>\n");
+
+                string who = _socketToPlayer.TryGetValue(client, out var pd)
+                    ? pd.Username
+                    : "Unknown";
+
+                Log($"<color=green>Heartbeat from {who}</color>\n");
                 return;
             }
 
-            BasePacket bp = new BasePacket();
-            int bufferSize = buffer.Length;
             int offset = 0;
+            int bufferSize = buffer.Length;
+            var bp = new BasePacket();
             bp.Deserialize(buffer, ref bufferSize, ref offset);
 
-            Log($"Packet type: {bp.Type} | Size: {bp.Size} | Offset: {offset}\n");
-
-            #region Packets Switch case
-            switch (bp.Type)
+            while (bufferSize > 0)
             {
-                case BasePacket.PacketType.None:
-                    {
-                        break;
-                    }
+                Log($"Packet type: {bp.Type} | Size: {bp.Size} | Offset: {offset}\n");
 
-                case BasePacket.PacketType.Join:
-                    {
-                        JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        PlayerData newPlayer = jp.PlayerData;
-
-                        bool alreadyInLobby = _playersInLobby.Exists(p => p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username);
-                        if (!alreadyInLobby)
+                switch (bp.Type)
+                {
+                    case PacketType.Join:
                         {
-                            _playersInLobby.Add(newPlayer);
-                            _socketToPlayer[client] = newPlayer;
+                            JoinPacket jp = new JoinPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                            var newPlayer = jp.PlayerData;
 
-                            for (int existingIndex = 0; existingIndex < _clientsInServer.Count; existingIndex++)
+                            bool already = _playersInLobby.Exists(p => p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username);
+
+                            if (!already)
                             {
-                                if (existingIndex == clientIndex) continue;
-                                SendPacket(_clientsInServer[existingIndex], jp.Serialize());
+                                _playersInLobby.Add(newPlayer);
+
+                                _socketToPlayer[client] = newPlayer;
+
+                                _lastHeartbeatTimes[client] = DateTime.UtcNow;
+
+                                BroadcastToAllPlayersInLobby(jp.Serialize(), clientIndex);
                             }
+
+                            var list = _playersInLobby.Where(p => p.DuckID != newPlayer.DuckID).ToList();
+                            var pdlp = new PlayerDataListPacket(list);
+                            SendPacket(client, pdlp.Serialize());
+
+                            var hostPkt = new SceneChangePacket(_playersInLobby[0], -1);
+                            BroadcastToAllPlayersInLobby(hostPkt.Serialize(), -1);
+                            break;
                         }
-                        else
+
+                    case PacketType.Position:
                         {
-                            Debug.Log($" !!Server cs line 120!!: There is a duplicate of duck ID {newPlayer.DuckID} and username {newPlayer.Username}");
+                            PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                            BroadcastToAllPlayersInLobby(pp.Serialize(), clientIndex);
+                            break;
                         }
 
-                        var clientList = _playersInLobby.FindAll(p => !(p.DuckID == newPlayer.DuckID && p.Username == newPlayer.Username));
-                        PlayerDataListPacket pdlp = new PlayerDataListPacket(clientList);
-                        SendPacket(client, pdlp.Serialize());
-
-                        SceneChangePacket hostSetPacket = new SceneChangePacket(_playersInLobby[0], -1);
-                        BroadcastToAllPlayersInLobby(hostSetPacket.Serialize(), -1);
-                        break;
-                    }
-
-                case BasePacket.PacketType.ClientList:
-                    {
-                        break;
-                    }
-
-                case BasePacket.PacketType.Message:
-                    {
-                        MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        byte[] mpb = mp.Serialize();
-                        BroadcastToAllPlayersInLobby(mpb, clientIndex);
-                        break;
-                    }
-
-                case BasePacket.PacketType.Instantiate:
-                    {
-                        InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        BroadcastToAllPlayersInLobby(ip.Serialize(), clientIndex);
-
-                        Log($"  Prefab Name: {ip.PrefabName}\n");
-                        Log($"  Owner ID: {ip.PlayerData.DuckID}\n");
-
-                        break;
-                    }
-
-                case BasePacket.PacketType.Position:
-                    {
-                        PositionPacket pp = new PositionPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        BroadcastToAllPlayersInLobby(pp.Serialize(), clientIndex);
-                        break;
-                    }
-
-                case BasePacket.PacketType.Destroy:
-                    {
-                        DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        BroadcastToAllPlayersInLobby(dp.Serialize(), clientIndex);
-
-                        Log($"  Owner ID: {dp.PlayerData.DuckID}\n");
-                        Log($"  Object ID: {dp.ObjectID}\n");
-                        break;
-                    }
-
-                case BasePacket.PacketType.ReadyStatus:
-                    {
-                        ReadinessPacket readyPacket = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        _playerReadyStatus[readyPacket.PlayerData.DuckID] = readyPacket.IsReady;
-
-                        Log($"  {readyPacket.PlayerData.Username}'s readiness status is: {readyPacket.IsReady}\n");
-                        #region Checks if all players are ready
-
-                        if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
+                    case PacketType.Instantiate:
                         {
-                            if (_playersInLobby.Count < 2) return;
+                            InstantiatePacket ip = new InstantiatePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                            BroadcastToAllPlayersInLobby(ip.Serialize(), clientIndex);
 
-                            int chosenScene = UnityEngine.Random.Range(2, 4);
-                            Log($"All players ready — loading Scene {chosenScene}");
+                            Log($"  Prefab Name: {ip.PrefabName}\n");
+                            Log($"  Owner ID: {ip.PlayerData.DuckID}\n");
 
-                            SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], chosenScene);
-                            BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
-
-                            Log("== All players are READY! ==\n");
+                            break;
                         }
 
-                        #endregion
+                    case PacketType.Message:
+                        {
+                            MessagePacket mp = new MessagePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                            BroadcastToAllPlayersInLobby(mp.Serialize(), clientIndex);
+                            break;
+                        }
 
-                        break;
-                    }
+                    case PacketType.Destroy:
+                        {
+                            DestroyPacket dp = new DestroyPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                            BroadcastToAllPlayersInLobby(dp.Serialize(), clientIndex);
+                            break;
+                        }
 
-                case BasePacket.PacketType.SceneChange:
-                    {
-                        SceneChangePacket sceneChangePacket = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        break;
-                    }
+                    case PacketType.ReadyStatus:
+                        {
+                            ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
+                            _playerReadyStatus[rp.PlayerData.DuckID] = rp.IsReady;
+                            break;
+                        }
 
-                case BasePacket.PacketType.Heartbeat:
-                    {
-                        var hb = new HeartbeatPacket().Deserialize(buffer, ref bufferSize, ref offset);
-                        _lastHeartbeatTimes[client] = DateTime.UtcNow;
-                        if (_socketToPlayer.TryGetValue(client, out var sender))
-                            Log($"<color=green>Heartbeat from {sender.Username}</color>\n");
-                        else
-                            Log("<color=yellow>Heartbeat from unknown client</color>\n");
-                        break;
-                    }
+                    case PacketType.SceneChange:
+                        {
+                            SceneChangePacket sceneChangePacket = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
+                            break;
+                        }
 
-                default:
-                    {
-                        break;
-                    }
+                    default:
+                        {
+                            bufferSize = 0;
+                            break;
+                        }
+                }
 
-                    #endregion
+                if (bufferSize > 0)
+                {
+                    bp = new BasePacket();
+                    bp.Deserialize(buffer, ref bufferSize, ref offset);
+                }
             }
         }
 
@@ -362,6 +336,7 @@ namespace Networking.Core
         {
             _feedbackText.text = "";
         }
+
         private void DisconnectClient(Socket client)
         {
             _lastHeartbeatTimes.Remove(client);
@@ -382,11 +357,13 @@ namespace Networking.Core
                 _playerReadyStatus.Remove(gone.DuckID);
 
                 var destroy = new DestroyPacket(gone, "Duck" + gone.DuckID);
+
                 BroadcastToAllPlayersInLobby(destroy.Serialize(), -1);
             }
 
             var listPkt = new PlayerDataListPacket(_playersInLobby);
             BroadcastToAllPlayersInLobby(listPkt.Serialize(), -1);
+
 
             if (_playersInLobby.Count > 0)
             {

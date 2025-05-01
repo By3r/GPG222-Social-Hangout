@@ -39,30 +39,40 @@ namespace Networking.Core
 
         private void FixedUpdate()
         {
-            if (Client.Instance.PlayersInLobby.Count < 2) return;
-            if (OwnerID != Client.Instance.PlayerData.DuckID) return;
+            if (Client.Instance.PlayersInLobby.Count > 1)
 
-            _packetTimer += Time.fixedDeltaTime;
-            if (_packetTimer < _packetFrequency) return;
-            _packetTimer = 0f;
-
-            Vector3 posDelta = transform.position - _lastSentPosition;
-            float rotDelta = Quaternion.Angle(transform.rotation, _lastSentRotation);
-
-            if (posDelta.sqrMagnitude > _movementThreshold * _movementThreshold ||
-                rotDelta > _rotationThreshold)
             {
+                if (OwnerID != Client.Instance.PlayerData.DuckID) return;
 
-                var pp = new PositionPacket(
-                    Client.Instance.GetPlayerData(OwnerID),
-                    GameObjectID,
-                    transform.position,
-                    transform.rotation
-                );
-                Client.Instance.SendPositionPacket(pp);
+                _packetTimer += Time.fixedDeltaTime;
+                if (_packetTimer >= _packetFrequency)
+                {
+                    _packetTimer = 0f;
 
-                _lastSentPosition = transform.position;
-                _lastSentRotation = transform.rotation;
+                    Vector3 positionDelta = transform.position - _lastSentPosition;
+                    float rotationDelta = Quaternion.Angle(transform.rotation, _lastSentRotation);
+
+                    if (positionDelta.sqrMagnitude > _movementThreshold * _movementThreshold ||
+                        rotationDelta > _rotationThreshold)
+                    {
+                        PositionPacket pp = new PositionPacket(
+                            Client.Instance.GetPlayerData(OwnerID),
+                            GameObjectID,
+                            transform.position,
+                            transform.rotation
+                        );
+                        Client.Instance.SendPositionPacket(pp);
+
+                        _lastSentPosition = transform.position;
+                        _lastSentRotation = transform.rotation;
+                    }
+                }
+
+                if (_syncTransform != null)
+                {
+                    transform.position = Vector3.Lerp(transform.position, _syncTransform.position, Time.fixedDeltaTime / _packetFrequency);
+                    transform.rotation = Quaternion.Lerp(transform.rotation, _syncTransform.rotation, Time.fixedDeltaTime / _packetFrequency);
+                }
             }
         }
 
