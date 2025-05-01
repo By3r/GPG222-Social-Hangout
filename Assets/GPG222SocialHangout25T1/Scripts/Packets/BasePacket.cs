@@ -23,6 +23,7 @@ namespace Networking.Packets
             Destroy = 6,
             ReadyStatus = 7,
             SceneChange = 8,
+            Heartbeat = 9
         }
         public PacketType Type { get; set; }
         public PlayerData PlayerData { get; set; }
