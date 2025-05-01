@@ -364,46 +364,38 @@ namespace Networking.Core
         }
         private void DisconnectClient(Socket client)
         {
-            // 1) Remove socket→player and heartbeat tracking
-            _socketToPlayer.Remove(client);
             _lastHeartbeatTimes.Remove(client);
+            if (!_socketToPlayer.TryGetValue(client, out var gone))
+            {
+                gone = null;
+            }
+            _socketToPlayer.Remove(client);
 
-            // 2) Find and remove from server lists
-            int idx = _clientsInServer.IndexOf(client);
-            if (idx == -1) return;
-
-            PlayerData gone = _playersInLobby.FirstOrDefault(p =>
-                _clientsInServer.IndexOf(client) == _playersInLobby.IndexOf(p));
-
-            _clientsInServer.RemoveAt(idx);
+            _clientsInServer.Remove(client);
             _receiveBuffers.Remove(client);
             _bufferCounts.Remove(client);
+            client.Close();
 
             if (gone != null)
             {
-                _playersInLobby.Remove(gone);
+                _playersInLobby.RemoveAll(p => p.DuckID == gone.DuckID && p.Username == gone.Username);
                 _playerReadyStatus.Remove(gone.DuckID);
 
-                // 3) Tell everyone to destroy that duck
-                DestroyPacket destroy = new DestroyPacket(gone, /*objectID if you track it*/ "Duck" + gone.DuckID);
+                var destroy = new DestroyPacket(gone, "Duck" + gone.DuckID);
                 BroadcastToAllPlayersInLobby(destroy.Serialize(), -1);
-
-                // 4) Send updated lobby list
-                var listPkt = new PlayerDataListPacket(_playersInLobby);
-                BroadcastToAllPlayersInLobby(listPkt.Serialize(), -1);
-
-                // 5) If host left, assign new host and notify
-                if (_playersInLobby.Count > 0)
-                {
-                    var newHost = _playersInLobby[0];
-                    var hostPkt = new SceneChangePacket(newHost, -1);
-                    BroadcastToAllPlayersInLobby(hostPkt.Serialize(), -1);
-                }
             }
 
-            client.Close();
+            var listPkt = new PlayerDataListPacket(_playersInLobby);
+            BroadcastToAllPlayersInLobby(listPkt.Serialize(), -1);
 
-            Log($"<color=red>Client {gone?.Username ?? "Unknown"} disconnected and cleaned up.</color>\n");
+            if (_playersInLobby.Count > 0)
+            {
+                var newHost = _playersInLobby[0];
+                var hostPkt = new SceneChangePacket(newHost, -1);
+                BroadcastToAllPlayersInLobby(hostPkt.Serialize(), -1);
+            }
+
+            Log($"<color=red>Client {gone?.Username ?? "Unknown"} disconnected</color>\n");
         }
 
         #endregion

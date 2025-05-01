@@ -60,7 +60,7 @@ namespace Networking.Core
         {
             try // Attempt to connect to the server
             {
-                _clientSocket = new Socket( AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             }
             catch (SocketException e) // We could not connect so print out the error
             {
@@ -88,7 +88,7 @@ namespace Networking.Core
             {
                 if (_clientSocket.Available > 0)
                 {
-                    int bytesReceived = _clientSocket.Receive( _receiveBuffer, _bufferCount, _receiveBuffer.Length - _bufferCount, SocketFlags.None);
+                    int bytesReceived = _clientSocket.Receive(_receiveBuffer, _bufferCount, _receiveBuffer.Length - _bufferCount, SocketFlags.None);
                     _bufferCount += bytesReceived;
 
                     while (_bufferCount >= 4)
@@ -101,7 +101,7 @@ namespace Networking.Core
 
                         ProcessPacket(packetBytes);
 
-                        System.Buffer.BlockCopy( _receiveBuffer, packetLength + 4, _receiveBuffer, 0, _bufferCount - (packetLength + 4));
+                        System.Buffer.BlockCopy(_receiveBuffer, packetLength + 4, _receiveBuffer, 0, _bufferCount - (packetLength + 4));
                         _bufferCount -= (packetLength + 4);
                     }
                 }
@@ -401,6 +401,6 @@ namespace Networking.Core
             SendPacket(new HeartbeatPacket().Serialize());
         }
         #endregion
-#endregion
+        #endregion
     }
 }
