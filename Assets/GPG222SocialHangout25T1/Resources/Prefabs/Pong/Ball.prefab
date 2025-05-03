@@ -147,7 +147,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa1481d83f40462e8cfef5b8d0c820f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 1
+  _speed: 2
   LastPlayerContacted: -1
 --- !u!114 &607587936520556236
 MonoBehaviour:

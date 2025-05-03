@@ -17,6 +17,10 @@ namespace Networking.Core.Pong
             if (other.gameObject.CompareTag("PongBall"))
             {
                 BallController ballController = other.gameObject.GetComponent<BallController>();
+                if (ballController.LastPlayerContacted == -1)
+                {
+                    ballController.LastPlayerContacted = Client.Instance.PlayersInLobby[0].DuckID;
+                }
                 pongController.ScoreGoal(ballController.LastPlayerContacted);
                 ballController.ResetBall();
             }
