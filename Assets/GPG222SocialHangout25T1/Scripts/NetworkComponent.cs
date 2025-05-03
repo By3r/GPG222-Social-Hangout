@@ -11,6 +11,8 @@ namespace Networking.Core
     {
         public string GameObjectID { get; private set; }
         public int OwnerID { get; private set; }
+        public bool IsPhysics = false;
+        private Rigidbody _rb;
 
         [SerializeField] private float _packetFrequency = .2f;
         private float _packetTimer = 0f;
@@ -20,6 +22,7 @@ namespace Networking.Core
         {
             Client.Instance.PositionPacketReceivedEvent += PositionPacketReceivedEvent;
             _syncTransform = transform;
+            _rb = GetComponent<Rigidbody>();
         }
 
         private void OnDisable()
@@ -31,24 +34,21 @@ namespace Networking.Core
         {
             if (Client.Instance.PlayersInLobby.Count > 1) // We are not the only client in the server
             {
-                // we don't want to send  updates in the lobby scene if we are a duck (bouyancy components are present)
-                if (Client.Instance.SceneIndex == 1) // We are in the lobby scene
-                {
-                    // We don't continue if we have a bouyancy controller, ie. we are a player
-                    BouyancyObject bouyancyObject = GetComponent<BouyancyObject>();
-                    if (bouyancyObject != null)
-                    {
-                        return;
-                    }
-                }
-                
                 if (OwnerID != Client.Instance.PlayerData.DuckID) // This is not our object so it should have its transform synced
                 {
                     // If we have a transform to sync to, then lerp to it
                     if (_syncTransform != null)
                     {
-                        transform.position = Vector3.Lerp(transform.position, _syncTransform.position,  _packetFrequency);
-                        transform.rotation = Quaternion.Lerp(transform.rotation, _syncTransform.rotation, _packetFrequency);
+                        if (IsPhysics)
+                        {
+                            _rb.velocity = Vector3.Lerp(_rb.velocity, _syncTransform.position, _packetFrequency);
+                            _rb.angularVelocity = Vector3.Lerp(_rb.angularVelocity, _syncTransform.rotation.eulerAngles, _packetFrequency);
+                        }
+                        else
+                        {
+                            transform.position = Vector3.Lerp(transform.position, _syncTransform.position, _packetFrequency);
+                            transform.rotation = Quaternion.Lerp(transform.rotation, _syncTransform.rotation, _packetFrequency);
+                        }
                     }
                     
                     return; // We only want to continue if this is our object
@@ -60,8 +60,19 @@ namespace Networking.Core
                 {
                     _packetTimer = 0f;
                     // TODO: Small optimisation is theoretically possible by only sending position packets if we have moved a sufficient distance
-                    PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, transform.position, transform.rotation);
-                    Client.Instance.SendPositionPacket(pp);
+                    if (IsPhysics)
+                    {
+                        Vector3 av = _rb.angularVelocity;
+                        Quaternion rotation = new Quaternion(av.x, av.y, av.z, 0);
+                        PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, _rb.velocity, rotation, true);
+                        Client.Instance.SendPositionPacket(pp);
+                    }
+                    else
+                    {
+                        PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, transform.position, transform.rotation);
+                        Client.Instance.SendPositionPacket(pp);
+                    }
+                    
                 }
                 
                 
@@ -74,6 +85,7 @@ namespace Networking.Core
             {
                 if (GameObjectID == pp.ObjectID)
                 {
+                    IsPhysics = pp.IsPhysics;
                     _syncTransform.position = pp.Position;
                     _syncTransform.rotation = pp.Rotation;
                 }

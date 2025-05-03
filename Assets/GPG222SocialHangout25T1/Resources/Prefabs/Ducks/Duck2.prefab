@@ -309,6 +309,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: defd6afc32d6405a88ba49cb5bd5cb45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsPhysics: 1
   _packetFrequency: 0.1
 --- !u!114 &678898365603664600
 MonoBehaviour:
