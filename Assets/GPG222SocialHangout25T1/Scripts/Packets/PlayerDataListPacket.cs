@@ -32,6 +32,7 @@ namespace Networking.Packets
             {
                 _writer.Write(player.Username);
                 _writer.Write(player.DuckID);
+                _writer.Write(player.WaveOffset);
             }
             
             return EndSerialize();
@@ -51,8 +52,10 @@ namespace Networking.Packets
                 Size += username.Length + 1;
                 int  duckID = _reader.ReadInt32();
                 Size += sizeof(int);
+                float waveOffset = _reader.ReadSingle();
+                Size += sizeof(float);
                 
-                PlayerData playerData = new PlayerData(duckID, username);
+                PlayerData playerData = new PlayerData(duckID, username, waveOffset);
                 Players.Add(playerData);
             }
 

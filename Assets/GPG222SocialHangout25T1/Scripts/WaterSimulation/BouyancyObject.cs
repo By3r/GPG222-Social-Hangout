@@ -39,7 +39,7 @@ namespace Networking.Core.WaterSimulation
             _floatersUnderWater = 0;
             foreach (var floater in Floaters)
             {
-                float difference = floater.position.y - WaterHeight;
+                float difference = floater.position.y - WaveManager.Instance.GetWaveHeight(floater.transform.position.x);
 
                 if (difference < 0)
                 {

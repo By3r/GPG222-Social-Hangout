@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using Networking.Core.Lobby;
+using Networking.Core.WaterSimulation;
 using Networking.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -150,6 +151,7 @@ namespace Networking.Core
                                 Debug.LogError("Scene change received");
                                 SceneChangePacket scp = new SceneChangePacket().Deserialize(buffer, ref bufferSize, ref offset);
                                 SceneHost = scp.PlayerData;
+                                
                                 if (scp.SceneID >= 0)
                                 {
                                     SceneManager.LoadScene(scp.SceneID);
@@ -157,10 +159,16 @@ namespace Networking.Core
                                 }
                                 else
                                 {
-                                    DuckSpawner duckSpawner = FindObjectOfType<DuckSpawner>();
-                                    if (duckSpawner != null)
+                                    if (SceneIndex == 1)
                                     {
-                                        duckSpawner.SpawnPlayer(PlayerData);
+                                        DuckSpawner duckSpawner = FindObjectOfType<DuckSpawner>();
+                                        if (duckSpawner != null)
+                                        {
+                                            duckSpawner.SpawnPlayer(PlayerData);
+                                        }
+                                        
+                                        // Setting wave offset for water simulation in the lobby
+                                        WaveManager.Instance.Offset = SceneHost.WaveOffset;
                                     }
                                 }
                                 break;
@@ -185,7 +193,7 @@ namespace Networking.Core
 
         public void JoinLobby(int duckChosen, string username)
         {
-            _playerData = new PlayerData(duckChosen, username);
+            _playerData = new PlayerData(duckChosen, username, Time.realtimeSinceStartup);
             _playersInLobby.Add(_playerData);
             _clientSocket.Send(new JoinPacket(_playerData).Serialize());
             SceneManager.LoadScene(1, LoadSceneMode.Single);
@@ -281,6 +289,23 @@ namespace Networking.Core
         {
             var readyPacket = new ReadinessPacket(_playerData, isReady);
             _clientSocket.Send(readyPacket.Serialize());
+        }
+
+        /// <summary>
+        /// Checks whether this client is the scene host
+        /// </summary>
+        /// <param name="playerData"></param>
+        /// <returns></returns>
+        public bool IsHost()
+        {
+            if (SceneHost.DuckID == _playerData.DuckID)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
