@@ -20,6 +20,8 @@ namespace Networking.Core.WaterSimulation
         
         private Rigidbody _rigidbody;
         [SerializeField] private bool _isUnderWater;
+        
+        NetworkComponent _networkComponent;
 
         private void Start()
         {

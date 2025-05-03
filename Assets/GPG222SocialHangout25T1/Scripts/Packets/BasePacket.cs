@@ -54,7 +54,6 @@ namespace Networking.Packets
             _writer.Write((int)Type);
             _writer.Write(PlayerData.DuckID);
             _writer.Write(PlayerData.Username);
-            _writer.Write(PlayerData.WaveOffset);
         }
 
         protected byte[] EndSerialize()
@@ -72,10 +71,9 @@ namespace Networking.Packets
             Type = (PacketType)_reader.ReadInt32();
             Size += sizeof(int); // PacketType size
             
-            PlayerData = new PlayerData(_reader.ReadInt32(), _reader.ReadString(), _reader.ReadSingle());
+            PlayerData = new PlayerData(_reader.ReadInt32(), _reader.ReadString());
             Size += PlayerData.Username.Length + 1; // Full size of the string including null terminator
             Size += sizeof(int); // DuckID size
-            Size += sizeof(float); // Wave Offset
         }
     }
 }

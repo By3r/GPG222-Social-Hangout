@@ -132,7 +132,7 @@ namespace Networking.Core
                                 _clientsInServer[i].Send(pdlp.Serialize());
                                 
                                 // Send the scene change packet to set host and spawn ducks
-                                SceneChangePacket hostSetPacket = new SceneChangePacket(_playersInLobby[0], -1);
+                                SceneChangePacket hostSetPacket = new SceneChangePacket(_playersInLobby[0], -1, Time.realtimeSinceStartup);
                                 BroadcastToAllPlayersInLobby(hostSetPacket.Serialize(), -1);
                                 break;
 
@@ -183,13 +183,13 @@ namespace Networking.Core
                                     if (_playersInLobby.Count == 1) return;
                                     else if (_playersInLobby.Count == 2) // If there is an even number of players, then they play the Pong minigame
                                     {
-                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 2);
+                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 2, Time.realtimeSinceStartup);
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
                                         Log("  Going to Pong minigame");
                                     }
                                     else // Otherwise if there is an odd number of players they play Dana's minigame
                                     {
-                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 3);
+                                        SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], 3, Time.realtimeSinceStartup);
                                         BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
                                         Log("  Going to Dana minigame");
                                     }

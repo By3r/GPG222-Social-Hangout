@@ -15,6 +15,9 @@ namespace Networking.Core.WaterSimulation
         public float Speed = 1f;
         public float Offset = 0f;
         
+        [Header("Debug")]
+        public TMP_Text DebugText;
+        
         private void Awake()
         {
             // Set up Singleton
@@ -33,6 +36,8 @@ namespace Networking.Core.WaterSimulation
         private void Update()
         {
             Offset += Speed * Time.deltaTime;
+            
+            DebugText.text = Offset.ToString();
         }
 
         public float GetWaveHeight(float x)

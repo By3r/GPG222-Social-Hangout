@@ -168,7 +168,7 @@ namespace Networking.Core
                                         }
                                         
                                         // Setting wave offset for water simulation in the lobby
-                                        WaveManager.Instance.Offset = SceneHost.WaveOffset;
+                                        WaveManager.Instance.Offset = scp.WaveOffset;
                                     }
                                 }
                                 break;
@@ -193,7 +193,7 @@ namespace Networking.Core
 
         public void JoinLobby(int duckChosen, string username)
         {
-            _playerData = new PlayerData(duckChosen, username, Time.realtimeSinceStartup);
+            _playerData = new PlayerData(duckChosen, username);
             _playersInLobby.Add(_playerData);
             _clientSocket.Send(new JoinPacket(_playerData).Serialize());
             SceneManager.LoadScene(1, LoadSceneMode.Single);

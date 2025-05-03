@@ -1,5 +1,6 @@
 using System;
 using Networking.Core.Syncing;
+using Networking.Core.WaterSimulation;
 using Networking.Packets;
 using TMPro;
 using UnityEngine;
@@ -26,13 +27,35 @@ namespace Networking.Core
             Client.Instance.PositionPacketReceivedEvent -= PositionPacketReceivedEvent;
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
-            if (Client.Instance.PlayersInLobby.Count > 1)
+            if (Client.Instance.PlayersInLobby.Count > 1) // We are not the only client in the server
             {
-                if (OwnerID != Client.Instance.PlayerData.DuckID) return;
+                // we don't want to send  updates in the lobby scene if we are a duck (bouyancy components are present)
+                if (Client.Instance.SceneIndex == 1) // We are in the lobby scene
+                {
+                    // We don't continue if we have a bouyancy controller, ie. we are a player
+                    BouyancyObject bouyancyObject = GetComponent<BouyancyObject>();
+                    if (bouyancyObject != null)
+                    {
+                        return;
+                    }
+                }
                 
-                _packetTimer += Time.fixedDeltaTime;
+                if (OwnerID != Client.Instance.PlayerData.DuckID) // This is not our object so it should have its transform synced
+                {
+                    // If we have a transform to sync to, then lerp to it
+                    if (_syncTransform != null)
+                    {
+                        transform.position = Vector3.Lerp(transform.position, _syncTransform.position,  _packetFrequency);
+                        transform.rotation = Quaternion.Lerp(transform.rotation, _syncTransform.rotation, _packetFrequency);
+                    }
+                    
+                    return; // We only want to continue if this is our object
+                }
+                
+                // We own this object so we send packets at a set frequency
+                _packetTimer += Time.deltaTime;
                 if (_packetTimer >= _packetFrequency)
                 {
                     _packetTimer = 0f;
@@ -40,22 +63,17 @@ namespace Networking.Core
                     PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, transform.position, transform.rotation);
                     Client.Instance.SendPositionPacket(pp);
                 }
-
-                if (_syncTransform != null)
-                {
-                    transform.position = Vector3.Lerp(transform.position, _syncTransform.position, Time.fixedDeltaTime * _packetFrequency);
-                }
+                
+                
             }
         }
 
         private void PositionPacketReceivedEvent(PositionPacket pp)
         {
-            Debug.LogError($"PP received from {pp.OwnerID} for {pp.ObjectID}");
             if (pp.OwnerID == OwnerID)
             {
                 if (GameObjectID == pp.ObjectID)
                 {
-                    Debug.LogError($"Position set for {gameObject.name}");
                     _syncTransform.position = pp.Position;
                     _syncTransform.rotation = pp.Rotation;
                 }
