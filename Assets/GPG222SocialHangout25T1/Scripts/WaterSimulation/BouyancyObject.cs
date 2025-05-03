@@ -39,7 +39,8 @@ namespace Networking.Core.WaterSimulation
             _floatersUnderWater = 0;
             foreach (var floater in Floaters)
             {
-                float difference = floater.position.y - WaveManager.Instance.GetWaveHeight(floater.transform.position.x);
+                Vector3 nearestWavePoint = WaveManager.Instance.GetNearestVertex(floater.transform.position);
+                float difference = floater.position.y - nearestWavePoint.y;
 
                 if (difference < 0)
                 {
