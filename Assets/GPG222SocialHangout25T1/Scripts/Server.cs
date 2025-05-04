@@ -265,6 +265,19 @@ namespace Networking.Core
                         {
                             ReadinessPacket rp = new ReadinessPacket().Deserialize(buffer, ref bufferSize, ref offset);
                             _playerReadyStatus[rp.PlayerData.DuckID] = rp.IsReady;
+
+                            if (_playerReadyStatus.Count == _playersInLobby.Count && !_playerReadyStatus.ContainsValue(false))
+                            {
+                                if (_playersInLobby.Count < 2)
+                                {
+                                    return;
+                                }
+
+                                int chosenScene = UnityEngine.Random.Range(2, 4);
+
+                                SceneChangePacket scp = new SceneChangePacket(_playersInLobby[0], chosenScene);
+                                BroadcastToAllPlayersInLobby(scp.Serialize(), -1);
+                            }
                             break;
                         }
 
