@@ -31,17 +31,6 @@ namespace Networking.Core
         {
             if (Client.Instance.PlayersInLobby.Count > 1) // We are not the only client in the server
             {
-                // we don't want to send  updates in the lobby scene if we are a duck (bouyancy components are present)
-                if (Client.Instance.SceneIndex == 1) // We are in the lobby scene
-                {
-                    // We don't continue if we have a bouyancy controller, ie. we are a player
-                    BouyancyObject bouyancyObject = GetComponent<BouyancyObject>();
-                    if (bouyancyObject != null)
-                    {
-                        return;
-                    }
-                }
-                
                 if (OwnerID != Client.Instance.PlayerData.DuckID) // This is not our object so it should have its transform synced
                 {
                     // If we have a transform to sync to, then lerp to it
@@ -59,7 +48,7 @@ namespace Networking.Core
                 if (_packetTimer >= _packetFrequency)
                 {
                     _packetTimer = 0f;
-                    // TODO: Small optimisation is theoretically possible by only sending position packets if we have moved a sufficient distance
+                    
                     PositionPacket pp = new PositionPacket(Client.Instance.GetPlayerData(OwnerID),  GameObjectID, transform.position, transform.rotation);
                     Client.Instance.SendPositionPacket(pp);
                 }
